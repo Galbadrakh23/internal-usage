@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(uuid()) 
+  email          String          @unique
+  name           String
+  password       String
+  role           Role            @default(USER)
+  createdAt      DateTime        @default(now())
+  ReportComments Comment[]
+  DailyReports   DailyReport[]
+  HourlyActivity HourlyActivity[]
+  records        Record[]
+}
+
+model Record {
+  id        Int      @id @default(autoincrement())
+  userId    String   // Updated to match User's UUID type
+  data      String
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HourlyActivity {
+  id        Int      @id @default(autoincrement())
+  userId    String   // Updated to match User's UUID type
+  activity  String
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DailyReport {
+  id        Int          @id @default(autoincrement())
+  content   String
+  status    ReportStatus @default(DRAFT)
+  userId    String       // Updated to match User's UUID type
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  date      DateTime
+  comments  Comment[]
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files     File[]
+
+  @@index([date])
+  @@index([userId])
+}
+
+model Comment {
+  id        Int         @id @default(autoincrement())
+  content   String
+  userId    String      // Updated to match User's UUID type
+  reportId  Int
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  report    DailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+}
+
+model File {
+  id         Int         @id @default(autoincrement())
+  filename   String
+  path       String
+  mimeType   String
+  size       Int
+  reportId   Int
+  uploadedAt DateTime    @default(now())
+  report     DailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+}
+
+enum Role {
+  USER
+  MANAGER
+  ADMIN
+}
+
+enum ReportStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWED
+  APPROVED
+}
