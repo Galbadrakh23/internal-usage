@@ -1,9 +1,18 @@
 import { Request, Response } from "express";
+import { getReports } from "../services/report.services";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Get reports for a specific date
+export const getAllReports = async (req: Request, res: Response) => {
+  try {
+    const reports = await getReports();
+    res.status(200).json(reports);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch reports" });
+  }
+};
+
 export const getReportsByDate = async (
   req: Request,
   res: Response,

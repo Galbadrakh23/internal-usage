@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +15,6 @@ const DailyReport = () => {
       { id: Date.now(), content: "", author: "Б.Болд", timestamp: new Date() },
     ]);
   };
-
   return (
     <div className="w-full max-w-4xl mx-auto space-y-4">
       <div className="flex justify-between items-center mb-6">

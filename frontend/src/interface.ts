@@ -32,3 +32,48 @@ export interface PaginationProps {
   totalPages: number;
   onPageChange: (page: number) => void;
 }
+
+export enum ReportStatus {
+  DRAFT = "DRAFT",
+  SUBMITTED = "SUBMITTED",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+}
+
+export interface Comment {
+  id: number;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  reportId: number;
+}
+
+export interface File {
+  id: number;
+  url: string;
+  fileType: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DailyReport {
+  id: number;
+  content: string;
+  status: ReportStatus;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  date: Date;
+  comments: Comment[];
+  user: User;
+  files: File[];
+}

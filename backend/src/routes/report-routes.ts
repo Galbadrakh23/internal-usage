@@ -5,13 +5,21 @@ import {
   createComment,
   uploadFile,
   updateReportStatus,
+  getAllReports,
 } from "../controllers/report.controller";
 
 const router = Router();
 
-// Route to get reports for a specific date
+router.get("/reports", async (req, res) => {
+  try {
+    await getAllReports(req, res);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch reports" });
+  }
+});
+
 router.get(
-  "/reports",
+  "/reports/day/",
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { date } = req.query; // Example: ?date=2025-01-22
@@ -21,12 +29,11 @@ router.get(
       }
       await getReportsByDate(req, res, date as string);
     } catch (error) {
-      next(error); // Passing the error to the global error handler
+      next(error);
     }
   }
 );
 
-// Route to create a new report
 router.post(
   "/reports",
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -43,7 +50,6 @@ router.post(
   }
 );
 
-// Route to create a new comment for a report
 router.post(
   "/reports/:reportId/comments",
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -61,7 +67,6 @@ router.post(
   }
 );
 
-// Route to upload a file to a report
 router.post(
   "/reports/:reportId/files",
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -79,7 +84,6 @@ router.post(
   }
 );
 
-// Route to update report status
 router.put(
   "/reports/:id/status",
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {

@@ -1,6 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
+export const getReports = async () => {
+  return await prisma.dailyReport.findMany();
+};
+
 // Create a new report
 const createNewReport = async (currentUserId: string, content: string) => {
   try {
@@ -18,7 +22,6 @@ const createNewReport = async (currentUserId: string, content: string) => {
   }
 };
 
-// Get reports for a specific date
 const getReportsByDate = async (startOfDay: Date, endOfDay: Date) => {
   try {
     const reports = await prisma.dailyReport.findMany({

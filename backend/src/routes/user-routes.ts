@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { getAllUsers, getUserProfile } from "../controllers/user.controller";
+import { getAllUsers } from "../controllers/user.controller";
 
 const router = Router();
 
+// router.use(authentication);
 // Route to get all users
 router.get("/users", async (req, res) => {
   try {

@@ -1,31 +1,46 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, User } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
-// Create a new user
-export const createUser = async (
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
+
+export const registerUser = async (
   name: string,
   email: string,
   password: string
-) => {
-  const hashedPassword = await bcrypt.hash(password, 10); // Hash the password before saving it
-  return await prisma.user.create({
-    data: { name, email, password: hashedPassword },
+): Promise<User> => {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+    },
   });
+  return user;
 };
 
-export const validateUser = async (email: string, password: string) => {
-  // Хэрэглгчийн и-мэйлээр хайх
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) {
-    throw new Error("Invalid email");
+export const authenticateUser = async (
+  email: string,
+  password: string
+): Promise<string | null> => {
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+  if (user && (await bcrypt.compare(password, user.password))) {
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    return token;
   }
-  // Хэрэглчийн оруулсан нууц үгийн хаш хийсэн нууц үгтэй харьцуулах.
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+  return null;
+};
 
-  if (!isPasswordValid) {
-    throw new Error("Invalid password");
+export const verifyToken = (token: string): any => {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
   }
-  // Return the user if validation is successful
-  return user;
 };

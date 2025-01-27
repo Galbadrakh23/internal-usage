@@ -24,19 +24,19 @@ const MainGrid = async () => {
       title: "Өдрийн тайлан",
       value: "12 тайлан",
       icon: <ClipboardList className="h-6 w-6" />,
-      link: "/daily-report",
+      link: "/dashboard/daily-report",
     },
     {
       title: "Цагийн тайлан",
       value: "24 ажилтан",
       icon: <Clock className="h-6 w-6" />,
-      link: "/time-report",
+      link: "/dashboard/time-report",
     },
     {
       title: "Өнөөдрийн хоол",
       value: "156 хүн",
       icon: <Utensils className="h-6 w-6" />,
-      link: "/meal-count",
+      link: "/dashboard/meal-count",
     },
     {
       title: "Patrol CheckPoint",
@@ -54,7 +54,7 @@ const MainGrid = async () => {
       title: "Ажилтны мэдээлэл",
       value: `5 ажилтан`,
       icon: <Users className="h-6 w-6" />,
-      link: "/employee-table",
+      link: "/dashboard/employee-table",
     },
   ];
 

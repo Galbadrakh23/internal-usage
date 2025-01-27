@@ -1,6 +1,6 @@
 "use client";
-
 import { useState } from "react";
+import axios from "axios";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,21 +12,26 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import axios from "axios";
-import { useRouter } from "next/navigation"; // For redirecting after login
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 import { apiUrl } from "@/utils/utils";
+import { toast } from "sonner";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+    const promise = () =>
+      new Promise((resolve) =>
+        setTimeout(() => resolve({ name: "Sonner" }), 2000)
+      );
 
     try {
       const response = await axios.post(`${apiUrl}/api/v1/login`, {
@@ -34,15 +39,28 @@ export default function SignIn() {
         password,
       });
 
-      const token = response.data.token;
-      localStorage.setItem("token", token);
-
-      router.push("/dashboard");
+      if (response.status === 200) {
+        const { userName } = response.data;
+        console.log("Data", response.data);
+        Cookies.set("userName", userName, { expires: 0.1 });
+        toast.promise(promise, {
+          loading: "Loading...",
+          success: () => {
+            return ` Login success`;
+          },
+          error: "Error",
+        });
+        router.push("/dashboard");
+      } else {
+        setError(response.data.message || "Login failed. Please try again.");
+      }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.error || "Login failed. Please try again.");
+        setError(
+          err.response.data.message || "Login failed. Please try again."
+        );
       } else {
-        setError("Алдаа гарлаа");
+        setError("An error occurred. Please try again.");
       }
     } finally {
       setIsLoading(false);

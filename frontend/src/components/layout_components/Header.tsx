@@ -1,4 +1,6 @@
 "use client";
+import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,17 +14,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, LogOut, User } from "lucide-react";
-import { UserContext } from "@/context/user-context";
-import { useContext } from "react";
 
 const Header = () => {
-  const { user } = useContext(UserContext);
-  console.log("Logged User : ", user?.username);
+  const [userName, setUserName] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const storedUserName = Cookies.get("userName");
+    if (storedUserName) {
+      setUserName(storedUserName);
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    Cookies.remove("userName");
     router.push("/login");
   };
 
@@ -56,13 +62,12 @@ const Header = () => {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none"></p>
-                <p className="text-xs leading-none text-muted-foreground"></p>
+                <p className="text-sm font-medium leading-none">{userName}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/#" className="w-full cursor-pointer">
+              <Link href="/profile" className="w-full cursor-pointer">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </Link>
