@@ -10,7 +10,7 @@ const api = axios.create({
 });
 
 export async function getUsers() {
-  const response = await api.get("api/v1/users");
+  const response = await api.get("api/users");
   return response.data;
 }
 
@@ -19,6 +19,6 @@ export async function createUser(userData: {
   email: string;
   password: string;
 }) {
-  const response = await api.post("api/v1/users", userData);
+  const response = await api.post("api/register", userData);
   return response.data;
 }

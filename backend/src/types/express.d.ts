@@ -1,11 +1,12 @@
-import { JwtPayload } from "jsonwebtoken";
-import { Request } from "express";
+import { User } from "@prisma/client"; // Import your User type if needed
 
-// Extend the Express Request interface to include the user property
 declare global {
   namespace Express {
     interface Request {
-      user?: string | JwtPayload;
+      user?: {
+        userId: string; // Adjust based on your JWT payload
+        role?: string; // Optional, if using roles
+      };
     }
   }
 }

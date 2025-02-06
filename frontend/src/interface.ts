@@ -18,14 +18,23 @@ export interface UserContextType {
   setUser: React.Dispatch<React.SetStateAction<IUser | null>>;
   fetchUserData?: () => void;
 }
+export interface DailyReportListProps {
+  dailyReports: DailyReport[];
+}
+export interface HourlyReportListProps {
+  hourlyReports: HourlyReport[];
+}
 
 export interface Employee {
-  id: number;
-  name: string | null;
-  position: string | null;
-  department: string | null;
-  email: string | null;
-  phone: string | null;
+  id: string | number;
+  name: string;
+  position: string;
+  email: string;
+  company: {
+    name: string;
+    // ... other company properties
+  };
+  phone: string;
 }
 export interface PaginationProps {
   currentPage: number;
@@ -36,8 +45,6 @@ export interface PaginationProps {
 export enum ReportStatus {
   DRAFT = "DRAFT",
   SUBMITTED = "SUBMITTED",
-  APPROVED = "APPROVED",
-  REJECTED = "REJECTED",
 }
 
 export interface Comment {
@@ -61,12 +68,11 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface DailyReport {
   id: number;
+  title: string;
   content: string;
   status: ReportStatus;
   userId: string;
@@ -76,4 +82,12 @@ export interface DailyReport {
   comments: Comment[];
   user: User;
   files: File[];
+}
+export interface HourlyReport {
+  id: number;
+  userId: string;
+  activity: string;
+  title: string;
+  date: Date;
+  user: User;
 }

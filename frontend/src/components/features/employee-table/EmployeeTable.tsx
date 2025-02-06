@@ -1,15 +1,6 @@
-"use client";
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-interface Employee {
-  id: number;
-  name: string | null;
-  position: string | null;
-  department: string | null;
-  email: string | null;
-  phone: string | null;
-}
+import { Employee } from "@/interface";
 
 interface PaginationProps {
   currentPage: number;
@@ -62,12 +53,12 @@ const Pagination: React.FC<PaginationProps> = ({
 const TableStatic: React.FC<{ data: Employee[] }> = ({ data }) => {
   const itemsPerPage = 25;
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(
+  const [selectedCompany, setSelectedDepartment] = useState<string | null>(
     null
   );
 
-  const filteredData = selectedDepartment
-    ? data.filter((employee) => employee.department === selectedDepartment)
+  const filteredData = selectedCompany
+    ? data.filter((employee) => employee.company.name === selectedCompany)
     : data;
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -80,10 +71,9 @@ const TableStatic: React.FC<{ data: Employee[] }> = ({ data }) => {
     setCurrentPage(page);
   };
 
-  const departments = Array.from(
-    new Set(data.map((employee) => employee.department))
+  const company = Array.from(
+    new Set(data.map((employee) => employee.company.name))
   );
-
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-4">
@@ -95,13 +85,16 @@ const TableStatic: React.FC<{ data: Employee[] }> = ({ data }) => {
         </div>
         <select
           className="border rounded p-2"
-          value={selectedDepartment || ""}
+          value={selectedCompany || ""}
           onChange={(e) => setSelectedDepartment(e.target.value || null)}
         >
           <option value="">Бүх алба хэлтэс</option>
-          {departments.map((department) => (
-            <option key={department} value={department || ""}>
-              {department}
+          {company.map((companyName, index) => (
+            <option
+              key={`company-${index}-${companyName}`}
+              value={companyName || ""}
+            >
+              {companyName}
             </option>
           ))}
         </select>
@@ -148,7 +141,7 @@ const TableStatic: React.FC<{ data: Employee[] }> = ({ data }) => {
                 {employee.email}
               </td>
               <td className="px-4 py-2 text-sm text-gray-700 border border-[#E4E4E7]">
-                {employee.department}
+                {employee.company.name}
               </td>
               <td className="px-4 py-2 text-sm text-gray-700 border border-[#E4E4E7]">
                 {employee.phone}

@@ -4,6 +4,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ReportProvider } from "@/context/ReportProvider";
 import { CreateReportProvider } from "@/context/CreateReportProvider";
+import { UserProvider } from "@/context/UserProvider";
+import { CreateReportHProvider } from "@/context/CreateReportHProvider";
+import { EmployeeProvider } from "@/context/EmployeeProvider";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -30,9 +33,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <Toaster position="top-right" richColors />
-        <ReportProvider>
-          <CreateReportProvider>{children}</CreateReportProvider>
-        </ReportProvider>
+        <UserProvider>
+          <ReportProvider>
+            <CreateReportProvider>
+              <CreateReportHProvider>
+                <EmployeeProvider>{children}</EmployeeProvider>
+              </CreateReportHProvider>
+            </CreateReportProvider>
+          </ReportProvider>
+        </UserProvider>
       </body>
     </html>
   );

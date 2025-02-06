@@ -10,7 +10,7 @@ export async function createUser(userData: {
 }) {
   try {
     const newUser = await api.createUser(userData);
-    revalidatePath("/api/v1/users");
+    revalidatePath("/api/users");
     return { success: true, user: newUser };
   } catch (error) {
     console.error("Алдаа гарлаа:", error);

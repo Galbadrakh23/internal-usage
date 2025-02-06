@@ -11,7 +11,7 @@ export default function MealCountPage() {
       <div className="p-8 border border-blue-50 rounded-lg">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6 flex items-center gap-4">
-            <Link href="/">
+            <Link href="/dashboard">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-4 w-4" />
               </Button>

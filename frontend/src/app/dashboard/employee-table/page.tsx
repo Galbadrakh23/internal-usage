@@ -1,10 +1,12 @@
-// import EmployeeTable from "@/components/features/employee-table/EmployeeTable";
-// import { prisma } from "@/lib/prisma";
+"use client";
 import Header from "@/components/layout_components/Header";
-import React from "react";
+import EmployeeTable from "@/components/features/employee-table/EmployeeTable";
+import { EmployeeContext } from "@/context/EmployeeProvider";
+import { useContext } from "react";
 
-const Employee = async () => {
-  // const emoployeesData = await prisma.employees.findMany();
+export default function Employee() {
+  const { employees } = useContext(EmployeeContext);
+
   return (
     <div className="mt-8">
       <Header />
@@ -12,10 +14,8 @@ const Employee = async () => {
         <h2 className="mb-4 text-3xl font-semibold text-center md:text-3xl md:mb-8 ">
           Ажилчдын мэдээлэл
         </h2>
-        {/* <EmployeeTable data={emoployeesData} /> */}
+        <EmployeeTable data={employees} />
       </main>
     </div>
   );
-};
-
-export default Employee;
+}

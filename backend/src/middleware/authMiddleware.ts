@@ -1,41 +1,24 @@
 import { Request, Response, NextFunction } from "express";
+import { verifyToken } from "../services/auth.services";
 
-interface IMyRequest extends Request {
-  user?: TokenPayload;
-}
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: TokenPayload;
-    }
-  }
-}
-
-import { decodeToken } from "../utils/jwt";
-
-interface TokenPayload {
-  id: string;
-  email: string;
-  // Add other properties as needed
-}
-export const authentication = (
-  req: IMyRequest,
+export const authenticate = (
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  if (!req.headers.authorization) {
-    return res
-      .status(401)
-      .json({ message: "Та энэ үйлдлийг хийхийн тулд нэвтэрнэ үү" });
-  }
-  const token = req.headers.authorization.split(" ")[1];
-  const user = decodeToken(token);
-  if (user) {
-    req.user = user as TokenPayload;
-  } else {
-    return res.status(401).json({ message: "Invalid token" });
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized: No token provided" });
   }
 
+  const decoded = verifyToken(token);
+  if (!decoded) {
+    return res
+      .status(403)
+      .json({ error: "Forbidden: Invalid or expired token" });
+  }
+
+  (req as any).user = decoded; // Attach user info to request
   next();
 };

@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,28 +9,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, LogOut, User } from "lucide-react";
+import { UserContext } from "@/context/UserProvider";
+import { useContext } from "react";
 
 const Header = () => {
-  const [userName, setUserName] = useState<string | null>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    const storedUserName = Cookies.get("userName");
-    if (storedUserName) {
-      setUserName(storedUserName);
-    }
-  }, []);
-
+  const { user } = useContext(UserContext);
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    Cookies.remove("userName");
+    Cookies.remove("token");
     router.push("/login");
   };
-
   return (
     <header className="flex items-center justify-between mb-8 px-4 py-2">
       <div className="flex items-center gap-8">
@@ -59,15 +49,13 @@ const Header = () => {
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{userName}</p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent align="end" className="w-auto">
+            <DropdownMenuLabel className="font-normal"></DropdownMenuLabel>
+            <DropdownMenuItem>
+              <span>{user?.name}</span>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/profile" className="w-full cursor-pointer">
+              <Link href="/#" className="w-full cursor-pointer">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </Link>

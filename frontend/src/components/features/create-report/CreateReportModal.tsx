@@ -1,7 +1,7 @@
-"use client";
-
-import { useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useCreateReport } from "@/context/CreateReportProvider";
+import { UserContext } from "@/context/UserProvider";
 import {
   Dialog,
   DialogContent,
@@ -20,121 +20,159 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useCreateReport } from "@/context/CreateReportProvider";
 import { PlusCircle } from "lucide-react";
 
+type ReportStatus = "DRAFT" | "SUBMITTED" | "REVIEWED";
+
+interface FormData {
+  title: string;
+  content: string;
+  date: string;
+  status: ReportStatus;
+}
+
 export function CreateReportModal() {
+  const { createReport } = useCreateReport();
+  const { user } = useContext(UserContext);
+  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [content, setContent] = useState("");
-  const [date, setDate] = useState("");
-  const [status, setStatus] = useState<
-    "DRAFT" | "SUBMITTED" | "REVIEWED" | "APPROVED"
-  >("DRAFT");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
-  const { createReport } = useCreateReport();
+  const [formData, setFormData] = useState<FormData>({
+    title: "",
+    content: "",
+    date: "",
+    status: "DRAFT",
+  });
+
+  useEffect(() => {
+    if (open && !user?.userId) {
+      setError("Та системд нэвтэрсэн байх шаардлагатай.");
+      setOpen(false);
+    }
+  }, [open, user]);
+
+  const handleChange = (field: keyof FormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
 
-    try {
-      const result = await createReport({
-        content,
-        userId: "user-id", // Replace with actual user ID from authentication context
-        date,
-        status,
-      });
+    // Double-check user existence before submission
+    if (!user?.userId) {
+      setError("Та системд нэвтэрсэн байх шаардлагатай.");
+      setOpen(false);
+      return;
+    }
 
-      if (result.success) {
+    if (Object.values(formData).some((value) => !value.trim())) {
+      setError("Бүх талбарыг бөглөнө үү.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const reportData = {
+        ...formData,
+        userId: user.userId, // Now we're sure user.id exists
+      };
+
+      const result = await createReport(reportData);
+
+      if (result?.success) {
         setOpen(false);
-        setContent("");
-        setDate("");
-        setStatus("DRAFT");
+        setFormData({ title: "", content: "", date: "", status: "DRAFT" });
         router.refresh();
       } else {
-        setError(
-          result.error || "An error occurred while creating the report."
-        );
+        setError(result?.error || "Тайлан үүсгэх үед алдаа гарлаа.");
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      setError("Unexpected error occurred. Please try again.");
+      console.error("Error creating report:", err);
+      setError("Гэнэтийн алдаа гарлаа. Дахин оролдоно уу.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Disable the trigger button if user is not logged in
+  const triggerButton = (
+    <Button variant="outline" disabled={!user?.userId}>
+      <PlusCircle className="h-4 w-4 mr-2" />
+      <span>{user?.userId ? "Шинэ тайлан" : "Нэвтрэх шаардлагатай"}</span>
+    </Button>
+  );
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (!isOpen) {
-          setContent("");
-          setDate("");
-          setStatus("DRAFT");
-          setError("");
-        }
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <PlusCircle className="h-4 w-4 mr-2" />
-          <span className="flex items-center">New Report</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{triggerButton}</DialogTrigger>
+      <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>Create New Report</DialogTitle>
+          <DialogTitle>Шинэ тайлан үүсгэх</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              disabled={isLoading}
-              required
-              placeholder="Enter the content of the report"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={status}
-              onValueChange={(
-                value: "DRAFT" | "SUBMITTED" | "REVIEWED" | "APPROVED"
-              ) => setStatus(value)}
-            >
-              <SelectTrigger disabled={isLoading}>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="DRAFT">Draft</SelectItem>
-                <SelectItem value="SUBMITTED">Submitted</SelectItem>
-                <SelectItem value="REVIEWED">Reviewed</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {error && <p className="text-red-500">{error}</p>}
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Creating..." : "Create Report"}
+          {error && (
+            <p className="text-red-500 text-sm" role="alert">
+              {error}
+            </p>
+          )}
+          {[
+            { id: "title", label: "Гарчиг", type: "input" },
+            { id: "content", label: "Агуулга", type: "textarea" },
+            { id: "date", label: "Огноо", type: "date" },
+            { id: "status", label: "Төлөв", type: "select" },
+          ].map((field) => (
+            <div key={field.id} className="space-y-2">
+              <Label htmlFor={field.id}>{field.label}</Label>
+              {field.type === "textarea" ? (
+                <Textarea
+                  id={field.id}
+                  value={formData[field.id as keyof FormData]}
+                  onChange={(e) =>
+                    handleChange(field.id as keyof FormData, e.target.value)
+                  }
+                  disabled={isLoading}
+                  required
+                  rows={4}
+                />
+              ) : field.type === "select" ? (
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => handleChange("status", value)}
+                >
+                  <SelectTrigger id="status" disabled={isLoading}>
+                    <SelectValue placeholder="Төлөв сонгоно уу" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DRAFT">Ноорог</SelectItem>
+                    <SelectItem value="SUBMITTED">Илгээсэн</SelectItem>
+                    <SelectItem value="REVIEWED">Хянасан</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id={field.id}
+                  type={field.type}
+                  value={formData[field.id as keyof FormData]}
+                  onChange={(e) =>
+                    handleChange(field.id as keyof FormData, e.target.value)
+                  }
+                  disabled={isLoading}
+                  required
+                  max={
+                    field.type === "date"
+                      ? new Date().toISOString().split("T")[0]
+                      : undefined
+                  }
+                />
+              )}
+            </div>
+          ))}
+
+          <Button className="w-full" type="submit" disabled={isLoading}>
+            {isLoading ? "Үүсгэж байна..." : "Тайлан үүсгэх"}
           </Button>
         </form>
       </DialogContent>

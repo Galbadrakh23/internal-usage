@@ -1,53 +1,44 @@
 "use client";
 
 import React, { createContext, useContext } from "react";
-import { revalidatePath } from "next/cache";
+import axios from "axios";
 import { apiUrl } from "@/utils/utils";
 
-// Define the shape of the context
 interface CreateReportContextType {
   createReport: (
     data: CreateReportData
   ) => Promise<{ success: boolean; data?: unknown; error?: string }>;
 }
 
-// Define the data structure for creating a report
 interface CreateReportData {
+  title: string;
   content: string;
   userId: string;
   date: string;
-  status: "DRAFT" | "SUBMITTED" | "REVIEWED" | "APPROVED";
+  status: "DRAFT" | "SUBMITTED" | "REVIEWED";
 }
 
-// Create the context
 const CreateReportContext = createContext<CreateReportContextType | undefined>(
   undefined
 );
 
-// Create a provider component
 export const CreateReportProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const createReport = async (data: CreateReportData) => {
+    console.log("Creating report with data:", data);
     try {
-      const response = await fetch(`${apiUrl}/reports`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create report");
-      }
-
-      const newReport = await response.json();
-      revalidatePath("/reports");
+      const { data: newReport } = await axios.post(
+        `${apiUrl}/api/reports`,
+        data
+      );
       return { success: true, data: newReport };
     } catch (error) {
-      console.error("Error creating report:", error);
-      return { success: false, error: "Failed to create report" };
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to create report",
+      };
     }
   };
 
@@ -60,10 +51,9 @@ export const CreateReportProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const useCreateReport = () => {
   const context = useContext(CreateReportContext);
-  if (!context) {
+  if (!context)
     throw new Error(
       "useCreateReport must be used within a CreateReportProvider"
     );
-  }
   return context;
 };

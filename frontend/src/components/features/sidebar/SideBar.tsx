@@ -22,38 +22,25 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const items = [
+const MENU_ITEMS = [
   {
     title: "Өдрийн тайлан",
-    url: "daily-report",
+    url: "/dashboard/daily-report",
     icon: ClipboardList,
   },
-  {
-    title: "Цагийн тайлан",
-    url: "time-report",
-    icon: Clock,
-  },
-  {
-    title: "Хоолны тоо",
-    url: "meal-count",
-    icon: Utensils,
-  },
-  {
-    title: "Патрол чек",
-    url: "#",
-    icon: Shield,
-  },
-  {
-    title: "Ажил бүртгэл",
-    url: "#",
-    icon: ShoppingCart,
-  },
-  {
-    title: "Ажилтны мэдээлэл",
-    url: "employee-table",
-    icon: Users,
-  },
+  { title: "Цагийн тайлан", url: "/dashboard/time-report", icon: Clock },
+  { title: "Хоолны тоо", url: "/dashboard/meal-count", icon: Utensils },
+  { title: "Патрол чек", url: "#", icon: Shield },
+  { title: "Ажил бүртгэл", url: "#", icon: ShoppingCart },
+  { title: "Ажилтны мэдээлэл", url: "/dashboard/employee-table", icon: Users },
 ];
+
+const getItemStyles = (isActive: boolean) => ({
+  link: `flex items-center gap-3 px-4 py-2 rounded-lg transition-colors duration-200 ${
+    isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-100"
+  }`,
+  icon: `h-5 w-5 ${isActive ? "text-blue-600" : "text-gray-500"}`,
+});
 
 export function SideBar() {
   const pathname = usePathname();
@@ -68,7 +55,7 @@ export function SideBar() {
               Дотоод систем
             </SidebarGroupLabel>
             <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
+              onClick={() => setIsCollapsed((prev) => !prev)}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <ChevronDown
@@ -85,31 +72,16 @@ export function SideBar() {
             }`}
           >
             <SidebarMenu className="flex flex-col gap-4">
-              {items.map((item) => {
-                const isActive = pathname?.includes(item.url);
-                const Icon = item.icon;
+              {MENU_ITEMS.map(({ title, url, icon: Icon }) => {
+                const isActive = pathname?.includes(url);
+                const styles = getItemStyles(isActive);
 
                 return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className={`group w-full`}>
-                      <Link
-                        href={item.url}
-                        className={`
-                          flex items-center gap-3 px-4 py-2 rounded-lg
-                          transition-colors duration-200
-                          ${
-                            isActive
-                              ? "bg-blue-50 text-blue-600"
-                              : "text-gray-700 hover:bg-gray-100"
-                          }
-                        `}
-                      >
-                        <Icon
-                          className={`h-5 w-5 ${
-                            isActive ? "text-blue-600" : "text-gray-500"
-                          }`}
-                        />
-                        <span className="font-medium">{item.title}</span>
+                  <SidebarMenuItem key={title}>
+                    <SidebarMenuButton asChild className="group w-full">
+                      <Link href={url} className={styles.link}>
+                        <Icon className={styles.icon} />
+                        <span className="font-medium">{title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

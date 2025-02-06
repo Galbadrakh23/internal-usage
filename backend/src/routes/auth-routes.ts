@@ -1,11 +1,16 @@
-// routes/authRoutes.ts
 import { Router } from "express";
-import { register, login, verify } from "../controllers/auth.controller";
-
+import {
+  register,
+  login,
+  verify,
+  logout,
+} from "../controllers/auth.controller";
+const { authenticate } = require("../middleware/authMiddleware");
 const router = Router();
 
 router.post("/register", register);
 router.post("/login", login);
-router.get("/verify", verify);
+router.post("/logout", logout);
+router.get("/verify", authenticate, verify); // Protected
 
 export default router;

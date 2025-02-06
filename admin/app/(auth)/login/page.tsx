@@ -28,7 +28,7 @@ export default function SignIn() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${apiUrl}/api/v1/login`, {
+      const response = await axios.post(`${apiUrl}/api/login`, {
         email,
         password,
       });

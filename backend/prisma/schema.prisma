@@ -8,39 +8,45 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(uuid()) 
-  email          String          @unique
+  id             String           @id @default(uuid())
+  email          String           @unique
   name           String
   password       String
-  role           Role            @default(USER)
-  createdAt      DateTime        @default(now())
+  role           Role             @default(USER)
+  createdAt      DateTime         @default(now())
   ReportComments Comment[]
   DailyReports   DailyReport[]
-  HourlyActivity HourlyActivity[]
   records        Record[]
+  HourlyActivity HourlyActivity[]
 }
 
 model Record {
   id        Int      @id @default(autoincrement())
-  userId    String   // Updated to match User's UUID type
+  userId    String
   data      String
   timestamp DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model HourlyActivity {
-  id        Int      @id @default(autoincrement())
-  userId    String   // Updated to match User's UUID type
+  id        String   @id @default(cuid())
   activity  String
-  timestamp DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  date      DateTime
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("hourly_activities")
 }
 
 model DailyReport {
   id        Int          @id @default(autoincrement())
+  title     String
   content   String
   status    ReportStatus @default(DRAFT)
-  userId    String       // Updated to match User's UUID type
+  userId    String
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   date      DateTime
@@ -55,7 +61,7 @@ model DailyReport {
 model Comment {
   id        Int         @id @default(autoincrement())
   content   String
-  userId    String      // Updated to match User's UUID type
+  userId    String
   reportId  Int
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -78,6 +84,42 @@ model File {
   @@index([reportId])
 }
 
+model Company {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  employees Employee[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("companies")
+}
+
+model Employee {
+  id        Int      @id @default(autoincrement())
+  name      String
+  position  String
+  phone     String
+  companyId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  company   Company  @relation(fields: [companyId], references: [id])
+  @@index([name])
+  @@map("employees")
+}
+model CompanyDirectory {
+  id          Int      @id @default(autoincrement())
+  floor       Int      // Floor number
+  companyName String   // Company name
+  contactName String   // Contact person name
+  position    String   // Position/role
+  phone       String   // Phone number
+  createdAt   DateTime @default(now())
+
+  @@map("company_directory")
+  @@index([floor])
+  @@index([companyName])
+}
+
 enum Role {
   USER
   MANAGER
@@ -88,5 +130,4 @@ enum ReportStatus {
   DRAFT
   SUBMITTED
   REVIEWED
-  APPROVED
 }

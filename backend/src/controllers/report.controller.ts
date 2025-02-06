@@ -1,131 +1,66 @@
 import { Request, Response } from "express";
-import { getReports } from "../services/report.services";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export const getAllReports = async (req: Request, res: Response) => {
   try {
-    const reports = await getReports();
-    res.status(200).json(reports);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch reports" });
-  }
-};
-
-export const getReportsByDate = async (
-  req: Request,
-  res: Response,
-  date: string
-) => {
-  try {
     const reports = await prisma.dailyReport.findMany({
-      where: {
-        date: {
-          gte: new Date(date),
-          lte: new Date(new Date(date).setHours(23, 59, 59, 999)),
-        },
-      },
-      include: {
-        comments: true,
-        files: true,
-        user: true,
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        date: true,
+        status: true,
+        user: { select: { name: true, role: true } },
       },
     });
-    res.status(200).json(reports);
+    return res.status(200).json(reports); // Send response back to client
   } catch (error) {
-    res.status(500).json({ error: "Failed to load reports" });
+    return res.status(500).json({ message: "Internal Server Error" }); // Handle errors gracefully
   }
 };
 
-// Create a new report
-export const createReport = async (
-  req: Request,
-  res: Response,
-  content: string,
-  userId: string,
-  date: string,
-  status: string
-) => {
+export const deleteReport = async (req: Request, res: Response) => {
+  try {
+    const deletedReport = await prisma.dailyReport.delete({
+      where: { id: Number(req.params.id) },
+    });
+    return res
+      .status(200)
+      .json({ message: "Report deleted successfully", deletedReport });
+  } catch (error) {
+    return res.status(500).json({ message: "Error deleting report" });
+  }
+};
+
+export const createNewReport = async (req: Request, res: Response) => {
+  const { title, content, userId, date, status } = req.body;
   try {
     const newReport = await prisma.dailyReport.create({
       data: {
+        title,
         content,
-        status: status as "DRAFT" | "SUBMITTED" | "REVIEWED" | "APPROVED",
-        userId,
         date: new Date(date),
+        userId,
+        status,
       },
     });
     res.status(201).json(newReport);
   } catch (error) {
-    res.status(500).json({ error: "Failed to create report" });
+    res.status(500).json({ error: "Failed to Create Report" });
   }
 };
 
-// Create a new comment for a report
-export const createComment = async (
-  req: Request,
-  res: Response,
-  reportId: string,
-  content: string,
-  userId: string
-) => {
-  try {
-    const newComment = await prisma.comment.create({
-      data: {
-        content,
-        userId,
-        reportId: parseInt(reportId),
-      },
-    });
-    res.status(201).json(newComment);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create comment" });
-  }
-};
-
-// Upload a file to a report
-export const uploadFile = async (
-  req: Request,
-  res: Response,
-  reportId: string,
-  filename: string,
-  path: string,
-  mimeType: string,
-  size: number
-) => {
-  try {
-    const newFile = await prisma.file.create({
-      data: {
-        filename,
-        path,
-        mimeType,
-        size,
-        reportId: parseInt(reportId),
-      },
-    });
-    res.status(201).json(newFile);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to upload file" });
-  }
-};
-
-// Optional: Update report status
-export const updateReportStatus = async (
-  req: Request,
-  res: Response,
-  id: string,
-  status: string
-) => {
+export const updateReport = async (req: Request, res: Response) => {
+  const { title, content, status } = req.body;
   try {
     const updatedReport = await prisma.dailyReport.update({
-      where: { id: parseInt(id) },
-      data: {
-        status: status as "DRAFT" | "SUBMITTED" | "REVIEWED" | "APPROVED",
-      },
+      where: { id: Number(req.params.id) },
+      data: { title, content, status },
     });
     res.status(200).json(updatedReport);
   } catch (error) {
-    res.status(500).json({ error: "Failed to update report status" });
+    res.status(500).json({ error: "Failed to Update Report" });
   }
 };

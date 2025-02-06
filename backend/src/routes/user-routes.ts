@@ -3,8 +3,6 @@ import { getAllUsers } from "../controllers/user.controller";
 
 const router = Router();
 
-// router.use(authentication);
-// Route to get all users
 router.get("/users", async (req, res) => {
   try {
     await getAllUsers(req, res);
