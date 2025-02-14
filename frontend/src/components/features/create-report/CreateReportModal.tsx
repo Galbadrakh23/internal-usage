@@ -22,7 +22,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { PlusCircle } from "lucide-react";
 
-type ReportStatus = "DRAFT" | "SUBMITTED" | "REVIEWED";
+type ReportStatus = "ИЛГЭЭМЖ" | "ТЭМДЭГЛЭЛ" | "МЭДЭЭЛЭЛ";
 
 interface FormData {
   title: string;
@@ -30,7 +30,6 @@ interface FormData {
   date: string;
   status: ReportStatus;
 }
-
 export function CreateReportModal() {
   const { createReport } = useCreateReport();
   const { user } = useContext(UserContext);
@@ -42,7 +41,7 @@ export function CreateReportModal() {
     title: "",
     content: "",
     date: "",
-    status: "DRAFT",
+    status: "ИЛГЭЭМЖ",
   });
 
   useEffect(() => {
@@ -77,14 +76,14 @@ export function CreateReportModal() {
     try {
       const reportData = {
         ...formData,
-        userId: user.userId, // Now we're sure user.id exists
+        userId: user.userId,
       };
 
       const result = await createReport(reportData);
 
       if (result?.success) {
         setOpen(false);
-        setFormData({ title: "", content: "", date: "", status: "DRAFT" });
+        setFormData({ title: "", content: "", date: "", status: "ИЛГЭЭМЖ" });
         router.refresh();
       } else {
         setError(result?.error || "Тайлан үүсгэх үед алдаа гарлаа.");
@@ -122,7 +121,7 @@ export function CreateReportModal() {
             { id: "title", label: "Гарчиг", type: "input" },
             { id: "content", label: "Агуулга", type: "textarea" },
             { id: "date", label: "Огноо", type: "date" },
-            { id: "status", label: "Төлөв", type: "select" },
+            { id: "status", label: "Төрөл", type: "select" },
           ].map((field) => (
             <div key={field.id} className="space-y-2">
               <Label htmlFor={field.id}>{field.label}</Label>
@@ -146,9 +145,9 @@ export function CreateReportModal() {
                     <SelectValue placeholder="Төлөв сонгоно уу" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="DRAFT">Ноорог</SelectItem>
-                    <SelectItem value="SUBMITTED">Илгээсэн</SelectItem>
-                    <SelectItem value="REVIEWED">Хянасан</SelectItem>
+                    <SelectItem value="ИЛГЭЭМЖ">Илгээмж</SelectItem>
+                    <SelectItem value="ТЭМДЭГЛЭЛ">Тэмдэглэл</SelectItem>
+                    <SelectItem value="МЭДЭЭЛЭЛ">Мэдээлэл</SelectItem>
                   </SelectContent>
                 </Select>
               ) : (

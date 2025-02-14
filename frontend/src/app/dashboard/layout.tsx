@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { SideBar } from "@/components/features/sidebar/SideBar";
+import Header from "@/components/layout_components/Header";
 
 export default function DashboardLayout({
   children,
@@ -35,9 +36,16 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <SideBar />
-      <SidebarTrigger className="my-8 ml-4" />
-      <main className="container mx-auto px-2 sm:px-8 lg:px-2 ">
-        {children}
+      <SidebarTrigger className="my-7 ml-4" />
+      <main className="container mx-auto px-2 sm:px-8 lg:px-2">
+        <div className="mt-8">
+          <div className="max-w-8xl mx-auto space-y-4">
+            <Header />
+            <div className="p-8 rounded-lg mt-8 border border-blue-50">
+              {children}
+            </div>
+          </div>
+        </div>
       </main>
     </SidebarProvider>
   );

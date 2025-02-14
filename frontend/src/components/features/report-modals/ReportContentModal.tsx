@@ -8,10 +8,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Eye, Calendar, User } from "lucide-react";
-import type { DailyReport } from "@/interface";
+import type { HourlyReport } from "@/interface";
 
 interface ReportContentModalProps {
-  report: DailyReport;
+  report: HourlyReport;
 }
 
 export function ReportContentModal({ report }: ReportContentModalProps) {
@@ -46,7 +46,7 @@ export function ReportContentModal({ report }: ReportContentModalProps) {
           <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              <span>{new Date(report.createdAt).toLocaleDateString()}</span>
+              <span>{new Date(report.date).toLocaleDateString()}</span>
             </div>
             <div className="flex items-center gap-1">
               <User className="h-4 w-4" />
@@ -60,7 +60,7 @@ export function ReportContentModal({ report }: ReportContentModalProps) {
               Тайлангийн агуулга
             </h4>
             <div className="prose prose-sm max-w-none">
-              {report.content.split("\n").map((paragraph, index) => (
+              {report.activity.split("\n").map((paragraph, index) => (
                 <p key={index} className="mb-4 last:mb-0 text-slate-900">
                   {paragraph}
                 </p>

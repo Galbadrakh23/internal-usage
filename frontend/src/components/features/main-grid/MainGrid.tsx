@@ -1,54 +1,49 @@
 "use client";
-
-import React, { useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-
 import {
-  ClipboardList,
   Clock,
   Utensils,
   Shield,
-  ShoppingCart,
+  Construction,
   Users,
   ArrowRight,
+  Box,
 } from "lucide-react";
-import { EmployeeContext } from "@/context/EmployeeProvider";
-import { ReportContext } from "@/context/ReportProvider";
-// Quick stats type
-type QuickStat = {
-  title: string;
-  value: string;
-  label: string;
-  icon: React.ReactNode;
-  link: string;
-  color: string;
-};
-const MainGrid = () => {
-  const { employees } = useContext(EmployeeContext);
-  const { dailyReports, hourlyReports } = useContext(ReportContext);
+import { useEmployees } from "@/hooks/useEmployees";
+import { useReports } from "@/hooks/useReports";
+import { useDeliveries } from "@/hooks/useDeliveries";
+import { QuickStat } from "@/interface";
 
-  // Quick stats data
+const MainGrid = () => {
+  const { employees } = useEmployees();
+  const { dailyReports, hourlyReports } = useReports();
+  const { deliveries } = useDeliveries();
+
+  const tureltEmployees = employees.filter(
+    (emp) => emp.company.name === "Түрэлт"
+  );
+
   const quickStats: QuickStat[] = [
     {
-      title: "Өдрийн тайлан",
-      value: `${dailyReports.length}`,
+      title: "Хүлээн авсан илгээмжүүд",
+      value: `${deliveries.length}`,
       label: "тайлан",
-      icon: <ClipboardList className="h-6 w-6 text-gray-600" />,
-      link: "/dashboard/daily-report",
+      icon: <Box className="h-6 w-6 text-gray-600" />,
+      link: "/dashboard/delivery-board",
       color: "bg-gray-50",
     },
     {
-      title: "Цагийн тайлан",
-      value: `${hourlyReports.length}`,
+      title: "Нийт тайлан",
+      value: `${hourlyReports.length} / ${dailyReports.length}`,
       label: "тайлан",
       icon: <Clock className="h-6 w-6 text-gray-600" />,
-      link: "/dashboard/time-report",
+      link: "/dashboard/report-board",
       color: "bg-gray-50",
     },
     {
       title: "Өнөөдрийн хоол",
-      value: "156",
+      value: `${tureltEmployees.length}`,
       label: "хүн",
       icon: <Utensils className="h-6 w-6 text-gray-600" />,
       link: "/dashboard/meal-count",
@@ -66,8 +61,8 @@ const MainGrid = () => {
       title: "Ажил бүртгэл",
       value: "5",
       label: "захиалга",
-      icon: <ShoppingCart className="h-6 w-6 text-gray-600" />,
-      link: "/dashboard",
+      icon: <Construction className="h-6 w-6 text-gray-600" />,
+      link: "/dashboard/job-request",
       color: "bg-gray-50",
     },
     {

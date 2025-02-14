@@ -1,12 +1,7 @@
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Employee } from "@/interface";
-
-interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Employee, PaginationProps } from "@/interface";
+import { Button } from "@/components/ui/button";
 
 const Pagination: React.FC<PaginationProps> = ({
   currentPage,
@@ -14,7 +9,6 @@ const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
 }) => {
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-
   return (
     <div className="flex items-center justify-end space-x-2 py-4">
       <button
@@ -24,7 +18,6 @@ const Pagination: React.FC<PaginationProps> = ({
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
-
       {pages.map((page) => (
         <button
           key={page}
@@ -76,13 +69,7 @@ const TableStatic: React.FC<{ data: Employee[] }> = ({ data }) => {
   );
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center mb-4">
-        <div className="text-sm text-gray-600">
-          {`${startIndex + 1}-${Math.min(
-            endIndex,
-            filteredData.length
-          )} ажилтан харуулж байна (Нийт: ${filteredData.length})`}
-        </div>
+      <div className="flex items-end justify-between mb-4">
         <select
           className="border rounded p-2"
           value={selectedCompany || ""}
@@ -98,15 +85,22 @@ const TableStatic: React.FC<{ data: Employee[] }> = ({ data }) => {
             </option>
           ))}
         </select>
+
+        <Button
+          variant="outline"
+          className="hover:bg-gray-100 transition-colors"
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Хэвлэх
+        </Button>
       </div>
       <table className="w-full rounded-lg shadow-lg border bg-[#F4F4F5]">
         <thead className="bg-[#F4F4F5]">
-          <tr className="text-left">
+          <tr className="text-center">
             {[
               "№",
               "Ажилтны нэр",
               "Албан тушаал",
-              "Имэйл",
               "Алба хэлтэс",
               "Утасны дугаар",
             ].map((header, index) => (
@@ -138,9 +132,6 @@ const TableStatic: React.FC<{ data: Employee[] }> = ({ data }) => {
                 {employee.position}
               </td>
               <td className="px-4 py-2 text-sm text-gray-700 border border-[#E4E4E7]">
-                {employee.email}
-              </td>
-              <td className="px-4 py-2 text-sm text-gray-700 border border-[#E4E4E7]">
                 {employee.company.name}
               </td>
               <td className="px-4 py-2 text-sm text-gray-700 border border-[#E4E4E7]">
@@ -150,6 +141,12 @@ const TableStatic: React.FC<{ data: Employee[] }> = ({ data }) => {
           ))}
         </tbody>
       </table>
+      <div className="text-sm text-gray-600 mt-6">
+        {`${startIndex + 1}-${Math.min(
+          endIndex,
+          filteredData.length
+        )} ажилтан харуулж байна (Нийт: ${filteredData.length})`}
+      </div>
       <div className="mt-4 flex justify-center items-center">
         <Pagination
           currentPage={currentPage}

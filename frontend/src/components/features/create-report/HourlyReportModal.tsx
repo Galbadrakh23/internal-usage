@@ -152,7 +152,7 @@ export function HourlyReportModal() {
                     <SelectValue placeholder="Төлөвлөгөөт тайлангийн цагийг сонгох" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="09:40">09:40</SelectItem>
+                    <SelectItem value="07:40">07:40</SelectItem>
                     <SelectItem value="12:00">12:00</SelectItem>
                     <SelectItem value="19:00">19:00</SelectItem>
                     <SelectItem value="23:00">23:00</SelectItem>

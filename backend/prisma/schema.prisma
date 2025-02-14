@@ -18,6 +18,10 @@ model User {
   DailyReports   DailyReport[]
   records        Record[]
   HourlyActivity HourlyActivity[]
+  deliveryItems    DeliveryItem[]
+  jobRequests      JobRequest[]
+  jobRequestComments JobRequestComment[]
+  patrolChecks     PatrolCheck[]
 }
 
 model Record {
@@ -45,7 +49,7 @@ model DailyReport {
   id        Int          @id @default(autoincrement())
   title     String
   content   String
-  status    ReportStatus @default(DRAFT)
+  status    ReportStatus
   userId    String
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
@@ -127,7 +131,118 @@ enum Role {
 }
 
 enum ReportStatus {
-  DRAFT
-  SUBMITTED
-  REVIEWED
+  ИЛГЭЭМЖ
+  ТЭМДЭГЛЭЛ
+  МЭДЭЭЛЭЛ
+}
+// Delivery Items Management
+model DeliveryItem {
+  id          String   @id @default(cuid())
+  trackingNo  String   @unique
+  itemName    String
+  status      DeliveryStatus
+  receiverName String
+  receiverPhone String
+  senderName   String
+  senderPhone  String
+  location     String?
+  notes        String?
+  weight       Float?
+  userId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id])
+  
+  @@index([trackingNo])
+  @@index([status])
+  @@map("delivery_items")
+}
+
+enum DeliveryStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  RETURNED
+  CANCELLED
+}
+
+// Job Request Management
+model JobRequest {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  priority    Priority
+  status      JobStatus
+  category    String
+  location    String
+  assignedTo  String?
+  requestedBy String
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [requestedBy], references: [id])
+  comments    JobRequestComment[]
+  
+  @@index([status])
+  @@index([priority])
+  @@index([requestedBy])
+  @@map("job_requests")
+}
+
+model JobRequestComment {
+  id           String     @id @default(cuid())
+  content      String
+  jobRequestId String
+  userId       String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  jobRequest   JobRequest @relation(fields: [jobRequestId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id])
+  
+  @@index([jobRequestId])
+  @@map("job_request_comments")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum JobStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Patrol Check Management
+model PatrolCheck {
+  id          String    @id @default(cuid())
+  location    String
+  checkPoint  String
+  status      CheckStatus
+  notes       String?
+  issues      String?
+  imagePath   String?
+  performedBy String
+  startTime   DateTime
+  endTime     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [performedBy], references: [id])
+  
+  @@index([location])
+  @@index([performedBy])
+  @@index([startTime])
+  @@map("patrol_checks")
+}
+
+enum CheckStatus {
+  PENDING
+  COMPLETED
+  ISSUES_FOUND
+  MISSED
 }

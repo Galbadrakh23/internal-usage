@@ -25,7 +25,7 @@ const Header = () => {
   return (
     <header className="flex items-center justify-between mb-8 px-4 py-2">
       <div className="flex items-center gap-8">
-        <Link href="/">
+        <Link href="/dashboard">
           <Image
             src="/Turelt-Logo.png"
             alt="Company logo"
@@ -51,13 +51,11 @@ const Header = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-auto">
             <DropdownMenuLabel className="font-normal"></DropdownMenuLabel>
-            <DropdownMenuItem>
-              <span>{user?.name}</span>
-            </DropdownMenuItem>
+            <DropdownMenuItem></DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/#" className="w-full cursor-pointer">
+              <Link href="/dashboard" className="w-full cursor-pointer">
                 <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+                <span>{user?.name}</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>

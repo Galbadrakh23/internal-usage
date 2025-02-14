@@ -3,13 +3,13 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-  ClipboardList,
   Clock,
   Utensils,
   Shield,
   ShoppingCart,
   Users,
   ChevronDown,
+  Box,
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,12 +23,12 @@ import {
 } from "@/components/ui/sidebar";
 
 const MENU_ITEMS = [
+  { title: "Нийт тайлан", url: "/dashboard/time-report", icon: Clock },
   {
-    title: "Өдрийн тайлан",
-    url: "/dashboard/daily-report",
-    icon: ClipboardList,
+    title: "Хүргэлтийн мэдээлэл",
+    url: "/dashboard/delivery-board",
+    icon: Box,
   },
-  { title: "Цагийн тайлан", url: "/dashboard/time-report", icon: Clock },
   { title: "Хоолны тоо", url: "/dashboard/meal-count", icon: Utensils },
   { title: "Патрол чек", url: "#", icon: Shield },
   { title: "Ажил бүртгэл", url: "#", icon: ShoppingCart },

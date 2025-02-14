@@ -24,6 +24,11 @@ export interface DailyReportListProps {
 export interface HourlyReportListProps {
   hourlyReports: HourlyReport[];
 }
+export interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
 
 export interface Employee {
   id: string | number;
@@ -43,10 +48,10 @@ export interface PaginationProps {
 }
 
 export enum ReportStatus {
-  DRAFT = "DRAFT",
-  SUBMITTED = "SUBMITTED",
+  ИЛГЭЭМЖ = "ИЛГЭЭМЖ",
+  ТЭМДЭГЛЭЛ = "ТЭМДЭГЛЭЛ",
+  МЭДЭЭЛЭЛ = "МЭДЭЭЛЭЛ",
 }
-
 export interface Comment {
   id: number;
   content: string;
@@ -67,13 +72,12 @@ export interface File {
 export interface User {
   id: string;
   name: string;
-  email: string;
 }
 
 export interface DailyReport {
   id: number;
   title: string;
-  content: string;
+  activity: string;
   status: ReportStatus;
   userId: string;
   createdAt: Date;
@@ -86,8 +90,107 @@ export interface DailyReport {
 export interface HourlyReport {
   id: number;
   userId: string;
+  content: string;
   activity: string;
   title: string;
   date: Date;
   user: User;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export type QuickStat = {
+  title: string;
+  value: string;
+  label: string;
+  icon: React.ReactNode;
+  link: string;
+  color: string;
+};
+export interface TrackingItem {
+  id: string;
+  trackingNo: string;
+  itemName: string;
+  status: "PENDING" | "DELIVERED" | "IN_TRANSIT";
+  createdAt: string;
+  receiverName: string;
+  receiverPhone: string;
+  senderName: string;
+  senderPhone: string;
+  location: string;
+  notes: string;
+  weight: string;
+  userId: string;
+  user: {
+    name: string;
+  };
+}
+export interface User {
+  name: string;
+}
+
+export interface Activity {
+  date: string;
+  title: string;
+  user?: User;
+}
+
+export interface ReportContextType {
+  dailyReports: Activity[];
+  hourlyReports: Activity[];
+}
+
+export interface DeliveryContextType {
+  deliveries: Activity[];
+}
+export interface DeliveryFormValues {
+  trackingNo: string;
+  itemName: string;
+  status: "PENDING" | "DELIVERED" | "IN_TRANSIT";
+  receiverName: string;
+  receiverPhone: string;
+  senderName: string;
+  senderPhone: string;
+  location: string;
+  notes?: string;
+  weight?: number | null;
+}
+export type Delivery = {
+  id: string;
+  trackingNo: string;
+  itemName: string;
+  status: string;
+  receiverName: string;
+  senderName: string;
+  location: string;
+  user: { name: string };
+};
+export interface TrackingItemData {
+  trackingNo: string;
+  itemName: string;
+  status: "PENDING" | "DELIVERED" | "IN_TRANSIT";
+  receiverName: string;
+  receiverPhone: string;
+  senderName: string;
+  senderPhone: string;
+  location: string;
+  notes: string;
+  weight: number;
+  userId: string;
+}
+export interface JobRequest {
+  id: string;
+  title: string;
+  description: string;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  status: "OPEN" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  category: string;
+  location: string;
+  assignedTo?: string;
+  requestedBy: string;
+  dueDate?: Date;
+  completedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  user: User;
+  comments: Comment[];
 }

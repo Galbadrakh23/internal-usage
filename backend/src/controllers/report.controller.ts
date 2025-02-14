@@ -10,7 +10,7 @@ export const getAllReports = async (req: Request, res: Response) => {
         id: true,
         title: true,
         content: true,
-        date: true,
+        createdAt: true,
         status: true,
         user: { select: { name: true, role: true } },
       },

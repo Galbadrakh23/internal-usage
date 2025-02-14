@@ -9,13 +9,11 @@ interface CreateReportHContextType {
     data: CreateHourlyReportData
   ) => Promise<{ success: boolean; data?: unknown; error?: string }>;
 }
-
 interface CreateHourlyReportData {
   activity: string;
   userId: string;
   date: string;
 }
-
 const CreateHReportContext = createContext<
   CreateReportHContextType | undefined
 >(undefined);

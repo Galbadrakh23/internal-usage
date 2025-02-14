@@ -1,14 +1,10 @@
 "use client";
 
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { apiUrl } from "@/utils/utils";
 
-type User = {
-  userId: string;
-  name: string;
-  email: string;
-} | null;
+type User = { userId: string; name: string; email: string } | null;
 
 type UserContextType = {
   user: User;
@@ -27,30 +23,27 @@ export const UserContext = createContext<UserContextType>({
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const fetchUser = useCallback(async () => {
+
+  const fetchUser = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get(`${apiUrl}/api/verify`, {
+      const { data } = await axios.get(`${apiUrl}/api/verify`, {
         withCredentials: true,
       });
-      if (res.status === 200 && res.data?.user) {
-        setUser(res.data.user);
-      } else {
-        setUser(null);
-      }
+      setUser(data?.user || null);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         console.warn("Unauthorized: Logging out user.");
-        setUser(null);
       } else {
         console.error("Error fetching user:", error);
       }
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
-  const logout = useCallback(async () => {
+  const logout = async () => {
     try {
       await axios.post(
         `${apiUrl}/api/verify/logout`,
@@ -61,11 +54,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error("Logout failed:", error);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchUser();
-  }, [fetchUser]);
+  }, []);
 
   return (
     <UserContext.Provider value={{ user, isLoading, fetchUser, logout }}>

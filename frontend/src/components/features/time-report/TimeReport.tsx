@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,14 +18,7 @@ import {
   Search,
   Download,
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -36,6 +28,7 @@ import {
 import { format } from "date-fns";
 import { HourlyReportModal } from "../create-report/HourlyReportModal";
 import { Input } from "@/components/ui/input";
+import { ReportContentModal } from "@/components/features/report-modals/ReportContentModal";
 
 interface PaginationResult<T> {
   currentItems: T[];
@@ -71,11 +64,11 @@ export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
-
+  console.log("", setItemsPerPage);
   const filteredReports = hourlyReports.filter(
     (report) =>
       (date
-        ? new Date(report.date).toDateString() === date.toDateString()
+        ? new Date(report.createdAt).toDateString() === date.toDateString()
         : true) &&
       (searchTerm
         ? report.activity.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -83,7 +76,6 @@ export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
           report.user.name.toLowerCase().includes(searchTerm.toLowerCase())
         : true)
   );
-
   const {
     currentItems: currentReports,
     currentPage,
@@ -95,13 +87,11 @@ export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
 
   const handleExport = () => {
     const csvData = filteredReports.map((report) => ({
-      date: new Date(report.date).toLocaleDateString(),
+      date: new Date(report.createdAt).toLocaleDateString(),
       activity: report.activity,
       title: report.title,
       user: report.user.name,
     }));
-
-    // TODO: Implement CSV export
     console.log("Exporting data...", csvData);
   };
 
@@ -116,12 +106,9 @@ export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
   };
 
   return (
-    <Card className="w-full mt-8 shadow-sm">
-      <CardHeader className="border-b px-6">
+    <Card className="">
+      <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-gray-800">
-            Цагийн тайлангийн жагсаалт
-          </CardTitle>
           <div className="flex space-x-3">
             <Button
               variant="outline"
@@ -129,20 +116,20 @@ export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
               className="hover:bg-gray-100 transition-colors"
             >
               <Download className="mr-2 h-4 w-4" />
-              Экспорт
+              Татах
             </Button>
-            <HourlyReportModal />
           </div>
+          <HourlyReportModal />
         </div>
       </CardHeader>
       <CardContent className="pt-6 px-6">
         <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-          <div className="flex flex-1 items-center space-x-3">
+          <div className="flex flex-1 items-center space-x-3 justify-between">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={`w-[180px] justify-start text-left font-normal hover:bg-gray-100 transition-colors ${
+                  className={`w-[200px] justify-start text-left font-normal hover:bg-gray-200 transition-colors ${
                     !date && "text-muted-foreground"
                   }`}
                 >
@@ -157,20 +144,11 @@ export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
                   onSelect={handleDateSelect}
                   className="rounded-md border"
                   weekStartsOn={1}
-                  classNames={{
-                    head_cell: "font-medium text-xs text-muted-foreground",
-                    cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                    day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
-                    day_selected:
-                      "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                    nav_button:
-                      "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-                  }}
                 />
               </PopoverContent>
             </Popover>
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Хайх..."
                 value={searchTerm}
@@ -179,29 +157,12 @@ export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
               />
             </div>
           </div>
-          <Select
-            value={itemsPerPage.toString()}
-            onValueChange={(value) => {
-              setItemsPerPage(Number(value));
-              setCurrentPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[120px] hover:bg-gray-100 transition-colors">
-              <SelectValue placeholder="Мөрийн тоо" />
-            </SelectTrigger>
-            <SelectContent className="shadow-md">
-              <SelectItem value="5">5 мөр</SelectItem>
-              <SelectItem value="10">10 мөр</SelectItem>
-              <SelectItem value="15">15 мөр</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
-
         {/* Table */}
         <div className="rounded-md border shadow-sm">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50 hover:bg-gray-50">
+              <TableRow className="bg-gray-200 hover:bg-gray-50">
                 <TableHead className="w-[150px] font-semibold text-gray-700">
                   Огноо
                 </TableHead>
@@ -213,6 +174,9 @@ export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
                 </TableHead>
                 <TableHead className="w-[180px] font-semibold text-gray-700">
                   Үүсгэсэн ажилтан
+                </TableHead>
+                <TableHead className="w-[180px] font-semibold text-gray-700">
+                  Үйлдэл
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -233,11 +197,15 @@ export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
                     className="hover:bg-gray-50 transition-colors"
                   >
                     <TableCell className="font-medium">
-                      {new Date(report.date).toLocaleDateString()}
+                      {new Date(report.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>{report.activity}</TableCell>
+                    <TableCell>{report.title}</TableCell>
                     <TableCell>{report.title}</TableCell>
                     <TableCell>{report.user.name}</TableCell>
+
+                    <TableCell>
+                      <ReportContentModal report={report} />
+                    </TableCell>
                   </TableRow>
                 ))
               )}

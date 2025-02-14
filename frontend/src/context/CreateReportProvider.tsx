@@ -15,13 +15,11 @@ interface CreateReportData {
   content: string;
   userId: string;
   date: string;
-  status: "DRAFT" | "SUBMITTED" | "REVIEWED";
+  status: "ИЛГЭЭМЖ" | "ТЭМДЭГЛЭЛ" | "МЭДЭЭЛЭЛ";
 }
-
 const CreateReportContext = createContext<CreateReportContextType | undefined>(
   undefined
 );
-
 export const CreateReportProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -41,7 +39,6 @@ export const CreateReportProvider: React.FC<{ children: React.ReactNode }> = ({
       };
     }
   };
-
   return (
     <CreateReportContext.Provider value={{ createReport }}>
       {children}

@@ -7,6 +7,8 @@ import { CreateReportProvider } from "@/context/CreateReportProvider";
 import { UserProvider } from "@/context/UserProvider";
 import { CreateReportHProvider } from "@/context/CreateReportHProvider";
 import { EmployeeProvider } from "@/context/EmployeeProvider";
+import { DeliveryProvider } from "@/context/DeliveryProvider";
+import { JobRequestProvider } from "@/context/JobRequestProvider";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -34,13 +36,17 @@ export default function RootLayout({
       >
         <Toaster position="top-right" richColors />
         <UserProvider>
-          <ReportProvider>
-            <CreateReportProvider>
-              <CreateReportHProvider>
-                <EmployeeProvider>{children}</EmployeeProvider>
-              </CreateReportHProvider>
-            </CreateReportProvider>
-          </ReportProvider>
+          <JobRequestProvider>
+            <ReportProvider>
+              <CreateReportProvider>
+                <CreateReportHProvider>
+                  <DeliveryProvider>
+                    <EmployeeProvider>{children}</EmployeeProvider>
+                  </DeliveryProvider>
+                </CreateReportHProvider>
+              </CreateReportProvider>
+            </ReportProvider>
+          </JobRequestProvider>
         </UserProvider>
       </body>
     </html>

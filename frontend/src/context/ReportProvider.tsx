@@ -18,6 +18,8 @@ type ReportContext = {
   fetchAllHourlyReports: () => void;
   deleteReport: (id: number) => void;
   updateReport: (id: number, updatedReport: Partial<DailyReport>) => void;
+  refetchDailyReports: () => void;
+  refetchHourlyReports: () => void;
 };
 
 export const ReportContext = createContext<ReportContext>({
@@ -29,6 +31,8 @@ export const ReportContext = createContext<ReportContext>({
   fetchAllHourlyReports: () => {},
   deleteReport: () => {},
   updateReport: () => {},
+  refetchDailyReports: () => {},
+  refetchHourlyReports: () => {},
 });
 
 export const ReportProvider = ({ children }: ReportProviderProps) => {
@@ -118,6 +122,8 @@ export const ReportProvider = ({ children }: ReportProviderProps) => {
         fetchAllHourlyReports,
         deleteReport,
         updateReport,
+        refetchDailyReports: fetchAllDailyReports,
+        refetchHourlyReports: fetchAllHourlyReports,
       }}
     >
       {children}

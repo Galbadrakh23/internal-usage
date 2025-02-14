@@ -10,7 +10,7 @@ export const getAllHourly = async (req: Request, res: Response) => {
         id: true,
         activity: true,
         title: true,
-        date: true,
+        createdAt: true,
         user: {
           select: {
             name: true,
@@ -35,7 +35,6 @@ export const createNewHourly = async (req: Request, res: Response) => {
         message: "All fields (activity, title, date, userId) are required",
       });
     }
-
     // Create new hourly report
     const hourly = await prisma.hourlyActivity.create({
       data: {
