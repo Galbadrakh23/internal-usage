@@ -1,8 +1,12 @@
 import React from "react";
 import { Check, Clock, AlertTriangle, Loader2 } from "lucide-react";
 
-const StatusBadge = ({ status }) => {
-  const getStatusConfig = (status) => {
+interface StatusBadgeProps {
+  status: string;
+}
+
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+  const getStatusConfig = (status: string) => {
     switch (status?.toLowerCase()) {
       case "delivered":
         return {
