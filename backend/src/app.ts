@@ -21,7 +21,6 @@ app.use(
 app.use(cookieParser());
 
 app.use("/api/", userRoutes);
-app.use("/api/", reportRoutes);
 app.use("/api/", authRoutes);
 app.use("/api/", reportRoutes);
 app.use("/api/", hourlyRoutes);

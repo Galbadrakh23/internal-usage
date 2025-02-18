@@ -1,12 +1,16 @@
 {
   "compilerOptions": {
+    "target": "ES6",
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
     "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": [
-    "src/**/*.ts",
-    "src/types/express.d.ts" // Include the custom type definition file
-  ]
+  "include": ["src/**/*.ts", "src/types/express.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }
