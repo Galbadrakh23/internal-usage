@@ -16,7 +16,6 @@ export const getAllDeliveries = async (req: Request, res: Response) => {
         senderPhone: true,
         location: true,
         notes: true,
-        weight: true,
         createdAt: true,
         updatedAt: true,
         user: {
@@ -44,11 +43,9 @@ export const createDelivery = async (req: Request, res: Response) => {
       senderPhone,
       location,
       notes,
-      weight,
       userId,
     } = req.body;
 
-    // Simple validation
     if (
       !trackingNo?.trim() ||
       !itemName?.trim() ||
@@ -73,11 +70,9 @@ export const createDelivery = async (req: Request, res: Response) => {
         senderPhone,
         location,
         notes,
-        weight,
         userId,
       },
     });
-
     return res.status(201).json({
       success: true,
       data: delivery,

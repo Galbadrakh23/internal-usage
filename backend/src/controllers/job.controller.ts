@@ -45,7 +45,6 @@ export const getAllJobRequests = async (req: Request, res: Response) => {
   }
 };
 
-// Create a new job request
 export const createJobRequest = async (req: Request, res: Response) => {
   try {
     const {
@@ -59,7 +58,7 @@ export const createJobRequest = async (req: Request, res: Response) => {
       requestedBy,
     } = req.body;
 
-    // Basic validation for required fields
+    // Validate required fields
     if (
       !title?.trim() ||
       !description?.trim() ||
@@ -72,16 +71,36 @@ export const createJobRequest = async (req: Request, res: Response) => {
       });
     }
 
-    // Create new job request with default status as OPEN
+    // Validate priority enum
+    const validPriorities = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+    if (!validPriorities.includes(priority)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid priority value",
+      });
+    }
+
+    // Check if the user exists
+    const user = await prisma.user.findUnique({
+      where: { id: requestedBy },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+    }
+
     const jobRequest = await prisma.jobRequest.create({
       data: {
         title,
         description,
         priority,
-        status: "OPEN", // Default status for new requests
+        status: "OPEN", // Default status
         category,
         location,
-        assignedTo,
+        assignedTo: assignedTo || null,
         dueDate: dueDate ? new Date(dueDate) : null,
         requestedBy,
       },

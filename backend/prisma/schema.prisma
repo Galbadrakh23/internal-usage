@@ -8,20 +8,19 @@ datasource db {
 }
 
 model User {
-  id             String           @id @default(uuid())
-  email          String           @unique
-  name           String
-  password       String
-  role           Role             @default(USER)
-  createdAt      DateTime         @default(now())
-  ReportComments Comment[]
-  DailyReports   DailyReport[]
-  records        Record[]
-  HourlyActivity HourlyActivity[]
-  deliveryItems    DeliveryItem[]
-  jobRequests      JobRequest[]
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  name               String
+  password           String
+  role               Role                @default(USER)
+  createdAt          DateTime            @default(now())
+  ReportComments     Comment[]
+  records            Record[]
+  Report             Report[]
+  deliveryItems      DeliveryItem[]
   jobRequestComments JobRequestComment[]
-  patrolChecks     PatrolCheck[]
+  jobRequests        JobRequest[]
+  patrolChecks       PatrolCheck[]
 }
 
 model Record {
@@ -32,58 +31,30 @@ model Record {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model HourlyActivity {
-  id        String   @id @default(cuid())
-  activity  String
-  title     String
-  date      DateTime
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
-
-  @@map("hourly_activities")
-}
-
-model DailyReport {
+model Report {
   id        Int          @id @default(autoincrement())
   title     String
+  activity  String
   content   String
   status    ReportStatus
   userId    String
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   date      DateTime
-  comments  Comment[]
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  files     File[]
 
   @@index([date])
   @@index([userId])
 }
 
 model Comment {
-  id        Int         @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   content   String
   userId    String
   reportId  Int
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  report    DailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([reportId])
-}
-
-model File {
-  id         Int         @id @default(autoincrement())
-  filename   String
-  path       String
-  mimeType   String
-  size       Int
-  reportId   Int
-  uploadedAt DateTime    @default(now())
-  report     DailyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([reportId])
 }
@@ -91,9 +62,9 @@ model File {
 model Company {
   id        String     @id @default(uuid())
   name      String     @unique
-  employees Employee[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  employees Employee[]
 
   @@map("companies")
 }
@@ -107,68 +78,49 @@ model Employee {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   company   Company  @relation(fields: [companyId], references: [id])
+
   @@index([name])
   @@map("employees")
 }
+
 model CompanyDirectory {
   id          Int      @id @default(autoincrement())
-  floor       Int      // Floor number
-  companyName String   // Company name
-  contactName String   // Contact person name
-  position    String   // Position/role
-  phone       String   // Phone number
+  floor       Int
+  companyName String
+  contactName String
+  position    String
+  phone       String
   createdAt   DateTime @default(now())
 
-  @@map("company_directory")
   @@index([floor])
   @@index([companyName])
+  @@map("company_directory")
 }
 
-enum Role {
-  USER
-  MANAGER
-  ADMIN
-}
-
-enum ReportStatus {
-  ИЛГЭЭМЖ
-  ТЭМДЭГЛЭЛ
-  МЭДЭЭЛЭЛ
-}
-// Delivery Items Management
 model DeliveryItem {
-  id          String   @id @default(cuid())
-  trackingNo  String   @unique
-  itemName    String
-  status      DeliveryStatus
-  receiverName String
+  id            String         @id @default(cuid())
+  trackingNo    String         @unique
+  itemName      String
+  status        DeliveryStatus
+  receiverName  String
   receiverPhone String
-  senderName   String
-  senderPhone  String
-  location     String?
-  notes        String?
-  weight       Float?
-  userId       String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id])
-  
+  senderName    String
+  senderPhone   String
+  location      String?
+  notes         String?
+  weight        Float?
+  userId        String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id])
+
   @@index([trackingNo])
   @@index([status])
   @@map("delivery_items")
 }
 
-enum DeliveryStatus {
-  PENDING
-  IN_TRANSIT
-  DELIVERED
-  RETURNED
-  CANCELLED
-}
-
-// Job Request Management
 model JobRequest {
-  id          String    @id @default(cuid())
+  id          String              @id @default(cuid())
   title       String
   description String
   priority    Priority
@@ -179,11 +131,11 @@ model JobRequest {
   requestedBy String
   dueDate     DateTime?
   completedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [requestedBy], references: [id])
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
   comments    JobRequestComment[]
-  
+  user        User                @relation(fields: [requestedBy], references: [id])
+
   @@index([status])
   @@index([priority])
   @@index([requestedBy])
@@ -199,9 +151,62 @@ model JobRequestComment {
   updatedAt    DateTime   @updatedAt
   jobRequest   JobRequest @relation(fields: [jobRequestId], references: [id], onDelete: Cascade)
   user         User       @relation(fields: [userId], references: [id])
-  
+
   @@index([jobRequestId])
   @@map("job_request_comments")
+}
+
+model Property {
+  id           String        @id @default(uuid())
+  name         String
+  location     String
+  createdAt    DateTime      @default(now())
+  patrolChecks PatrolCheck[]
+
+  @@map("properties")
+}
+
+model PatrolCheck {
+  id              String      @id @default(cuid())
+  checkPoint      String
+  status          CheckStatus
+  notes           String?
+  imagePath       String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  checkedBy       String
+  propertyId      String
+  totalCheckPoint Int
+  user            User        @relation(fields: [checkedBy], references: [id])
+  property        Property    @relation(fields: [propertyId], references: [id])
+
+  @@map("patrol_checks")
+}
+model MealCount {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @unique
+  breakfast Int      @default(0)
+  lunch     Int      @default(0)
+  dinner    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  MANAGER
+  ADMIN
+}
+
+enum ReportStatus {
+  DAILY
+  HOURLY
+  IMPORTANT
+}
+
+enum DeliveryStatus {
+  PENDING
+  DELIVERED
 }
 
 enum Priority {
@@ -216,28 +221,6 @@ enum JobStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
-}
-
-// Patrol Check Management
-model PatrolCheck {
-  id          String    @id @default(cuid())
-  location    String
-  checkPoint  String
-  status      CheckStatus
-  notes       String?
-  issues      String?
-  imagePath   String?
-  performedBy String
-  startTime   DateTime
-  endTime     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [performedBy], references: [id])
-  
-  @@index([location])
-  @@index([performedBy])
-  @@index([startTime])
-  @@map("patrol_checks")
 }
 
 enum CheckStatus {

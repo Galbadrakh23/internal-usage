@@ -7,8 +7,8 @@ import {
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password } = req.body;
-    const user = await registerUser(name, email, password);
+    const { name, email, password, role } = req.body;
+    const user = await registerUser(name, email, password, role);
     res.status(201).json(user);
   } catch (error) {
     res.status(400).json({ error: "User already exists" });
