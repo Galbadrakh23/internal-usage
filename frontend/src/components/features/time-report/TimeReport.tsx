@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -9,26 +9,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { HourlyReportListProps } from "@/interface";
 import {
-  ChevronLeft,
-  ChevronRight,
-  CalendarIcon,
   AlertCircle,
-  Search,
+  ArrowDown,
+  ArrowUp,
   Download,
+  Loader2,
+  Search,
 } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { HourlyReportModal } from "../create-report/HourlyReportModal";
+import type { Report } from "@/interface";
+import Pagination from "../pagination/Pagination";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { ReportDetailModal } from "@/components/modals/ReportDetailModal";
 import { Input } from "@/components/ui/input";
-import { ReportContentModal } from "@/components/features/report-modals/ReportContentModal";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface ReportListProps {
+  Reports: Report[];
+  isLoading?: boolean;
+  updateReport: (id: number, updatedReport: Partial<Report>) => void;
+}
 
 interface PaginationResult<T> {
   currentItems: T[];
@@ -39,11 +53,25 @@ interface PaginationResult<T> {
   endIndex: number;
 }
 
+type SortField = "createdAt" | "title" | "status" | "user.name";
+type SortDirection = "asc" | "desc";
+
+const statusTranslations: Record<string, string> = {
+  daily: "Өдрийн",
+  hourly: "Цагийн",
+  important: "Яаралтай",
+};
+
 function usePagination<T>(
   items: T[],
   itemsPerPage: number
 ): PaginationResult<T> {
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to first page when items change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [items.length]);
 
   const totalPages = Math.ceil(items.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -60,22 +88,116 @@ function usePagination<T>(
   };
 }
 
-export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [searchTerm, setSearchTerm] = useState("");
-  console.log("", setItemsPerPage);
-  const filteredReports = hourlyReports.filter(
-    (report) =>
-      (date
-        ? new Date(report.createdAt).toDateString() === date.toDateString()
-        : true) &&
-      (searchTerm
-        ? report.activity.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          report.user.name.toLowerCase().includes(searchTerm.toLowerCase())
-        : true)
+const getStatusBadge = (status: string) => {
+  const displayStatus = statusTranslations[status.toLowerCase()] || status;
+
+  switch (status.toLowerCase()) {
+    case "daily":
+      return <Badge variant="success">{displayStatus}</Badge>;
+    case "hourly":
+      return <Badge variant="warning">{displayStatus}</Badge>;
+    case "important":
+      return <Badge variant="destructive">{displayStatus}</Badge>;
+    default:
+      return <Badge variant="default">{displayStatus}</Badge>;
+  }
+};
+
+// Helper function to export data as CSV
+const exportToCSV = (data: Report[]) => {
+  const headers = [
+    "Огноо",
+    "Тайлангийн гарчиг",
+    "Тайлангийн агуулга",
+    "Үүсгэсэн ажилтан",
+  ];
+
+  const formatDate = (date: Date) => date.toISOString().split("T")[0];
+
+  const csvRows = [
+    headers.join(";"), // Use semicolon for better compatibility
+    ...data.map((report) => {
+      const translatedStatus =
+        statusTranslations[report.status.toLowerCase()] || report.status;
+
+      return [
+        formatDate(new Date(report.createdAt)), // Standardized date format
+        `"${report.title.replace(/"/g, '""').replace(/\n/g, " ")}"`,
+        `"${translatedStatus.replace(/"/g, '""').replace(/\n/g, " ")}"`,
+        `"${report.user.name.replace(/"/g, '""').replace(/\n/g, " ")}"`,
+      ].join(";");
+    }),
+  ];
+
+  const csvString = "\uFEFF" + csvRows.join("\n"); // Add BOM for UTF-8 support
+  const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute(
+    "download",
+    `reports-${new Date().toISOString().split("T")[0]}.csv`
   );
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+export default function Report({
+  Reports,
+  isLoading = false,
+  updateReport,
+}: ReportListProps) {
+  const [itemsPerPage, setItemsPerPage] = useState(15);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [sortField, setSortField] = useState<SortField>("createdAt");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  // Filter reports based on search term
+  const filteredReports = Reports.filter((report) => {
+    if (!searchTerm) return true;
+
+    // Get translated status for search
+    const translatedStatus =
+      statusTranslations[report.status.toLowerCase()] || report.status;
+
+    return (
+      report.activity?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      translatedStatus.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  // Sort reports based on sort field and direction
+  const sortedReports = [...filteredReports].sort((a, b) => {
+    const aValue =
+      sortField === "createdAt"
+        ? new Date(a.createdAt).getTime()
+        : sortField === "user.name"
+        ? a.user.name
+        : a[sortField as keyof Report];
+
+    const bValue =
+      sortField === "createdAt"
+        ? new Date(b.createdAt).getTime()
+        : sortField === "user.name"
+        ? b.user.name
+        : b[sortField as keyof Report];
+
+    return sortDirection === "asc"
+      ? aValue < bValue
+        ? -1
+        : 1
+      : aValue > bValue
+      ? -1
+      : 1;
+  });
+
   const {
     currentItems: currentReports,
     currentPage,
@@ -83,181 +205,192 @@ export default function TimeReport({ hourlyReports }: HourlyReportListProps) {
     totalPages,
     startIndex,
     endIndex,
-  } = usePagination(filteredReports, itemsPerPage);
+  } = usePagination(sortedReports, itemsPerPage);
 
-  const handleExport = () => {
-    const csvData = filteredReports.map((report) => ({
-      date: new Date(report.createdAt).toLocaleDateString(),
-      activity: report.activity,
-      title: report.title,
-      user: report.user.name,
-    }));
-    console.log("Exporting data...", csvData);
+  const handleRowClick = (report: Report) => {
+    setSelectedReport(report);
+    setIsModalOpen(true);
   };
 
-  const handleDateSelect = (newDate: Date | undefined) => {
-    setDate(newDate);
-    setCurrentPage(1); // Reset to first page when date changes
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
   };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page when search changes
+  const renderSortIcon = (field: SortField) => {
+    if (sortField !== field) return null;
+    return sortDirection === "asc" ? (
+      <ArrowUp className="h-4 w-4 ml-1" />
+    ) : (
+      <ArrowDown className="h-4 w-4 ml-1" />
+    );
   };
 
   return (
-    <Card className="">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-3">
-            <Button
-              variant="outline"
-              onClick={handleExport}
-              className="hover:bg-gray-100 transition-colors"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Татах
-            </Button>
+    <Card className="overflow-hidden">
+      <CardContent className="p-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 border-b">
+          <div className="relative w-full sm:w-auto max-w-sm">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Хайх..."
+              className="pl-8 w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <HourlyReportModal />
-        </div>
-      </CardHeader>
-      <CardContent className="pt-6 px-6">
-        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-          <div className="flex flex-1 items-center space-x-3 justify-between">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`w-[200px] justify-start text-left font-normal hover:bg-gray-200 transition-colors ${
-                    !date && "text-muted-foreground"
-                  }`}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : "Огноо сонгох"}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => setItemsPerPage(Number.parseInt(value))}
+            >
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Мөрийн тоо" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 мөр</SelectItem>
+                <SelectItem value="15">15 мөр</SelectItem>
+                <SelectItem value="25">25 мөр</SelectItem>
+              </SelectContent>
+            </Select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Download className="h-4 w-4" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 shadow-md" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={handleDateSelect}
-                  className="rounded-md border"
-                  weekStartsOn={1}
-                />
-              </PopoverContent>
-            </Popover>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Хайх..."
-                value={searchTerm}
-                onChange={handleSearch}
-                className="pl-9 focus-visible:ring-1 focus-visible:ring-gray-300"
-              />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportToCSV(filteredReports)}>
+                  <Download className="h-4 w-4 mr-2" />
+                  CSV-р татах
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <div className="relative">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center h-60 space-y-3 text-muted-foreground animate-in fade-in-50">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <p className="text-sm font-medium">Ачааллаж байна...</p>
             </div>
-          </div>
-        </div>
-        {/* Table */}
-        <div className="rounded-md border shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-200 hover:bg-gray-50">
-                <TableHead className="w-[150px] font-semibold text-gray-700">
-                  Огноо
-                </TableHead>
-                <TableHead className="font-semibold text-gray-700">
-                  Тайлангийн агуулга
-                </TableHead>
-                <TableHead className="w-[200px] font-semibold text-gray-700">
-                  Оруулсан цаг
-                </TableHead>
-                <TableHead className="w-[180px] font-semibold text-gray-700">
-                  Үүсгэсэн ажилтан
-                </TableHead>
-                <TableHead className="w-[180px] font-semibold text-gray-700">
-                  Үйлдэл
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentReports.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-32 text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <AlertCircle className="h-8 w-8 mb-2" />
-                      <p>Мэдээлэл олдсонгүй</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                currentReports.map((report) => (
-                  <TableRow
-                    key={report.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <TableCell className="font-medium">
-                      {new Date(report.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>{report.title}</TableCell>
-                    <TableCell>{report.title}</TableCell>
-                    <TableCell>{report.user.name}</TableCell>
-
-                    <TableCell>
-                      <ReportContentModal report={report} />
-                    </TableCell>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted hover:bg-muted">
+                    <TableHead
+                      className="w-[150px] font-semibold cursor-pointer"
+                      onClick={() => handleSort("createdAt")}
+                    >
+                      <div className="flex items-center">
+                        Огноо
+                        {renderSortIcon("createdAt")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className="font-semibold cursor-pointer"
+                      onClick={() => handleSort("title")}
+                    >
+                      <div className="flex items-center">
+                        Тайлангийн гарчиг
+                        {renderSortIcon("title")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className="w-[200px] font-semibold cursor-pointer"
+                      onClick={() => handleSort("status")}
+                    >
+                      <div className="flex items-center">
+                        Төлөв
+                        {renderSortIcon("status")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className="w-[180px] font-semibold cursor-pointer"
+                      onClick={() => handleSort("user.name")}
+                    >
+                      <div className="flex items-center">
+                        Үүсгэсэн ажилтан
+                        {renderSortIcon("user.name")}
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-[100px] font-semibold"></TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Pagination */}
-        <div className="flex items-center justify-between mt-4">
-          <p className="text-sm text-muted-foreground">
-            Нийт {filteredReports.length} мөрнөөс {startIndex + 1}-
-            {Math.min(endIndex, filteredReports.length)} харуулж байна
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="hover:bg-gray-100 transition-colors disabled:opacity-50"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(page)}
-                className={`transition-colors ${
-                  currentPage === page
-                    ? "bg-gray-900 text-white hover:bg-gray-800"
-                    : "hover:bg-gray-100"
-                }`}
-              >
-                {page}
-              </Button>
-            ))}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="hover:bg-gray-100 transition-colors disabled:opacity-50"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {currentReports.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-40">
+                        <div className="flex flex-col items-center justify-center space-y-3 text-muted-foreground animate-in fade-in-50">
+                          <div className="rounded-full bg-muted p-3">
+                            <AlertCircle className="h-6 w-6" />
+                          </div>
+                          <p className="text-sm font-medium">
+                            Мэдээлэл олдсонгүй
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    currentReports.map((report) => (
+                      <TableRow
+                        key={report.id}
+                        className="hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => handleRowClick(report)}
+                      >
+                        <TableCell className="font-medium">
+                          {new Date(report.createdAt).toLocaleDateString(
+                            "en-CA"
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-[300px] truncate">
+                          {report.title}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(report.status)}</TableCell>
+                        <TableCell>{report.user.name}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm">
+                            Дэлгэрэнгүй
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </div>
       </CardContent>
+      <CardFooter className="flex flex-col items-center gap-4 p-4 border-t bg-muted/50">
+        <div className="flex items-center justify-between w-full">
+          <p className="text-sm text-muted-foreground">
+            Нийт {filteredReports.length} мөрнөөс{" "}
+            <span className="font-medium text-foreground">
+              {filteredReports.length > 0 ? startIndex + 1 : 0}-
+              {Math.min(endIndex, filteredReports.length)}
+            </span>{" "}
+            харуулж байна
+          </p>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </CardFooter>
+      <ReportDetailModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        report={selectedReport}
+        updateReport={updateReport}
+      />
     </Card>
   );
 }

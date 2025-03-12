@@ -1,5 +1,4 @@
-"use client";
-import React from "react";
+import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -10,6 +9,8 @@ import {
   Users,
   ChevronDown,
   Box,
+  MousePointer,
+  Menu,
 } from "lucide-react";
 import {
   Sidebar,
@@ -21,77 +22,195 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useUsers } from "@/context/UserProvider";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
 
-const MENU_ITEMS = [
-  { title: "Нийт тайлан", url: "/dashboard/time-report", icon: Clock },
+interface MenuCategory {
+  category: string;
+  items: MenuItem[];
+}
+
+const MENU_ITEMS: MenuCategory[] = [
   {
-    title: "Хүргэлтийн мэдээлэл",
-    url: "/dashboard/delivery-board",
-    icon: Box,
+    category: "Үндсэн",
+    items: [
+      { title: "Нүүр хуудас", url: "/dashboard", icon: MousePointer },
+      {
+        title: "Хүргэлтийн мэдээлэл",
+        url: "/dashboard/delivery-board",
+        icon: Box,
+      },
+    ],
   },
-  { title: "Хоолны тоо", url: "/dashboard/meal-count", icon: Utensils },
-  { title: "Патрол чек", url: "#", icon: Shield },
-  { title: "Ажил бүртгэл", url: "#", icon: ShoppingCart },
-  { title: "Ажилтны мэдээлэл", url: "/dashboard/employee-table", icon: Users },
+  {
+    category: "Тайлан",
+    items: [
+      { title: "Нийт тайлан", url: "/dashboard/report-board", icon: Clock },
+      { title: "Хоолны тоо", url: "/dashboard/meal-count", icon: Utensils },
+      { title: "Патрол чек", url: "/dashboard/patrol-check", icon: Shield },
+    ],
+  },
+  {
+    category: "Менежмент",
+    items: [
+      {
+        title: "Ажил бүртгэл",
+        url: "/dashboard/job-request",
+        icon: ShoppingCart,
+      },
+      {
+        title: "Ажилтны мэдээлэл",
+        url: "/dashboard/employee-table",
+        icon: Users,
+      },
+    ],
+  },
+];
+
+const ADMIN_MENU_ITEMS: MenuCategory[] = [
+  {
+    category: "Admin",
+    items: [
+      { title: "Хэрэглэгчийн мэдээлэл", url: "/dashboard/admin", icon: Users },
+    ],
+  },
+  ...MENU_ITEMS,
 ];
 
 const getItemStyles = (isActive: boolean) => ({
   link: `flex items-center gap-3 px-4 py-2 rounded-lg transition-colors duration-200 ${
-    isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-100"
+    isActive ? "bg-blue-100 text-blue-600" : "text-gray-700 hover:bg-gray-50"
   }`,
-  icon: `h-5 w-5 ${isActive ? "text-blue-600" : "text-gray-500"}`,
+  icon: `${isActive ? "text-blue-600" : "text-gray-500"}`,
 });
 
 export function SideBar() {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const { user } = useUsers();
+  const [collapsed, setCollapsed] = useState(false);
+  const [categoryCollapse, setCategoryCollapse] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  const userRole = user?.role ?? "USER";
+  const menuItems = userRole === "ADMIN" ? ADMIN_MENU_ITEMS : MENU_ITEMS;
+
+  const toggleCategory = (category: string) => {
+    setCategoryCollapse({
+      ...categoryCollapse,
+      [category]: !categoryCollapse[category],
+    });
+  };
 
   return (
-    <Sidebar className="min-h-screen border-r bg-white">
-      <SidebarContent>
-        <SidebarGroup>
-          <div className="flex items-center justify-between px-4 py-4">
-            <SidebarGroupLabel className="text-lg font-semibold text-gray-900">
-              Дотоод систем
-            </SidebarGroupLabel>
+    <TooltipProvider>
+      <Sidebar
+        className={`min-h-screen border-r bg-white transition-all duration-300 ${
+          collapsed ? "w-20" : "w-64"
+        }`}
+      >
+        <SidebarContent>
+          <div className="flex items-center justify-between p-4 border-b">
+            {!collapsed && (
+              <SidebarGroupLabel className="text-lg font-semibold text-gray-900">
+                {userRole === "ADMIN" ? "Админ" : "Ажилтан"}
+              </SidebarGroupLabel>
+            )}
             <button
-              onClick={() => setIsCollapsed((prev) => !prev)}
+              onClick={() => setCollapsed(!collapsed)}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <ChevronDown
-                className={`h-5 w-5 transition-transform ${
-                  isCollapsed ? "rotate-180" : ""
-                }`}
-              />
+              <Menu className="h-5 w-5 text-gray-600" />
             </button>
           </div>
 
-          <SidebarGroupContent
-            className={`transition-all duration-200 ${
-              isCollapsed ? "h-0 overflow-hidden" : ""
-            }`}
-          >
-            <SidebarMenu className="flex flex-col gap-4">
-              {MENU_ITEMS.map(({ title, url, icon: Icon }) => {
-                const isActive = pathname?.includes(url);
-                const styles = getItemStyles(isActive);
+          <div className="py-4">
+            {menuItems.map((category, idx) => (
+              <SidebarGroup key={idx} className="mb-4">
+                {!collapsed && (
+                  <div className="flex items-center justify-between px-4 py-2">
+                    <SidebarGroupLabel className="text-sm font-medium text-gray-500">
+                      {category.category}
+                    </SidebarGroupLabel>
+                    <button
+                      onClick={() => toggleCategory(category.category)}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${
+                          categoryCollapse[category.category]
+                            ? "rotate-180"
+                            : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
 
-                return (
-                  <SidebarMenuItem key={title}>
-                    <SidebarMenuButton asChild className="group w-full">
-                      <Link href={url} className={styles.link}>
-                        <Icon className={styles.icon} />
-                        <span className="font-medium">{title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+                <SidebarGroupContent
+                  className={`transition-all duration-200 ${
+                    categoryCollapse[category.category]
+                      ? "h-0 overflow-hidden"
+                      : ""
+                  }`}
+                >
+                  <SidebarMenu className="flex flex-col gap-1 px-2">
+                    {category.items.map(({ title, url, icon: Icon }) => {
+                      const isActive =
+                        url === "/dashboard"
+                          ? pathname === url
+                          : pathname === url || pathname?.startsWith(`${url}/`);
+                      const styles = getItemStyles(isActive);
+
+                      return (
+                        <SidebarMenuItem key={title}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <SidebarMenuButton
+                                asChild
+                                className="group w-full"
+                              >
+                                <Link
+                                  href={url}
+                                  className={`${styles.link} ${
+                                    collapsed ? "justify-center px-2" : ""
+                                  }`}
+                                >
+                                  <Icon className={`h-5 w-5 ${styles.icon}`} />
+                                  {!collapsed && (
+                                    <span className="font-medium">{title}</span>
+                                  )}
+                                </Link>
+                              </SidebarMenuButton>
+                            </TooltipTrigger>
+                            {collapsed && (
+                              <TooltipContent side="right">
+                                <p>{title}</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    </TooltipProvider>
   );
 }
 

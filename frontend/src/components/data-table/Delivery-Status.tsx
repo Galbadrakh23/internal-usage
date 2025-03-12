@@ -22,23 +22,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  CircleEllipsis,
-  Trash2Icon,
-  CheckCircle2,
-  Truck,
-  Clock,
-} from "lucide-react";
+import { CircleEllipsis, Trash2Icon, CheckCircle2, Clock } from "lucide-react";
 
 const DeliveryStatusUpdater = ({ deliveryId }: { deliveryId: string }) => {
   const { updateDelivery, deleteDelivery } = useContext(DeliveryContext);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleStatusChange = async (
-    newStatus: "PENDING" | "DELIVERED" | "IN_TRANSIT"
-  ) => {
+  const handleStatusChange = async (newStatus: "PENDING" | "DELIVERED") => {
     try {
       await updateDelivery(deliveryId, { status: newStatus });
+      setIsDropdownOpen(false);
     } catch (error) {
       console.error("Failed to update status", error);
     }
@@ -55,17 +49,16 @@ const DeliveryStatusUpdater = ({ deliveryId }: { deliveryId: string }) => {
 
   const statusOptions = [
     { status: "PENDING", label: "Үлдээсэн", icon: Clock },
-    { status: "IN_TRANSIT", label: "Хүлээгдэж байна", icon: Truck },
     { status: "DELIVERED", label: "Хүлээлгэж өгсөн", icon: CheckCircle2 },
   ] as const;
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <span className="sr-only">Цэс нээх</span>
-            <CircleEllipsis className="h-4 w-4" />
+            <CircleEllipsis size={20} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">

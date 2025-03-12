@@ -1,69 +1,84 @@
 "use client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Truck, CheckCircle } from "lucide-react";
-import { DataTable } from "@/components/data-table/data-table";
-import { columns } from "@/components/data-table/columns";
-import { useContext } from "react";
+
+import { useMemo, useContext, useState, useEffect } from "react";
+import { Package, CheckCircle } from "lucide-react";
 import { DeliveryContext } from "@/context/DeliveryProvider";
 import DeliveryModal from "@/components/modals/NewDeliveryModal";
-import { TrackingItem } from "@/interface";
+import { DeliveryTable } from "@/components/data-table/data-table";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import PageHeader from "@/components/buttons/PageHeader";
 
 export default function DeliveryPage() {
-  const { deliveries } = useContext(DeliveryContext);
+  const { deliveries, fetchDeliveries } = useContext(DeliveryContext);
+  const [selectedStat, setSelectedStat] = useState("total");
+
+  // Fetch data when the component mounts
+  useEffect(() => {
+    fetchDeliveries();
+  }, [fetchDeliveries]);
+
+  const stats = useMemo(() => {
+    const inTransit = deliveries.filter(
+      (delivery) => delivery.status === "PENDING"
+    ).length;
+    const delivered = deliveries.filter(
+      (delivery) => delivery.status === "DELIVERED"
+    ).length;
+
+    return {
+      total: deliveries.length,
+      inTransit,
+      delivered,
+    };
+  }, [deliveries]);
+
+  const statsConfig = {
+    total: { label: "Бүгд", icon: Package, value: stats.total },
+    pending: { label: "Үлдээсэн", icon: Package, value: stats.inTransit },
+    delivered: { label: "Хүргэсэн", icon: CheckCircle, value: stats.delivered },
+  };
+
+  const filteredDeliveries = useMemo(() => {
+    if (selectedStat === "total") return deliveries;
+    return deliveries.filter(
+      (delivery) => delivery.status.toUpperCase() === selectedStat.toUpperCase()
+    );
+  }, [selectedStat, deliveries]);
+
   return (
-    <div className="flex-1 space-y-6 p-2 pt-2">
-      <div className="flex items-center justify-between space-y-2">
-        <div className="mb-2 flex items-center gap-4"></div>
-        <div className="flex items-center space-x-2">
+    <main className="flex-1 space-y-8">
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Хүргэлтийн мэдээлэл" />
+        <div className="flex justify-between">
           <DeliveryModal />
+          <div className="w-full md:w-36">
+            <Select value={selectedStat} onValueChange={setSelectedStat}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select statistic" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {Object.entries(statsConfig).map(([key, { label }]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Нийт илгээмж</CardTitle>
-            <Package className="h-6 w-6 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{deliveries.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Хүлээгдэж буй</CardTitle>
-            <Truck className="h-6 w-6 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {
-                deliveries.filter(
-                  (delivery) => delivery.status === "IN_TRANSIT"
-                ).length
-              }
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Хүлээлгэж өгсөн
-            </CardTitle>
-            <CheckCircle className="h-6 w-6 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {
-                deliveries.filter((delivery) => delivery.status === "DELIVERED")
-                  .length
-              }
-            </div>
-          </CardContent>
-        </Card>
+      <div>
+        <DeliveryTable data={filteredDeliveries} />
       </div>
-      <DataTable
-        columns={columns}
-        data={deliveries as unknown as TrackingItem[]}
-      />
-    </div>
+    </main>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useEffect, useState } from "react";
-import { DailyReport, HourlyReport } from "@/interface";
+import { Report } from "@/interface";
 import { apiUrl } from "@/utils/utils";
 import axios from "axios";
 
@@ -9,61 +9,42 @@ type ReportProviderProps = {
   children: React.ReactNode;
 };
 
+type CreateReportData = Omit<Report, "id">;
+
 type ReportContext = {
-  dailyReports: DailyReport[];
-  hourlyReports: HourlyReport[];
+  Reports: Report[];
   loading: boolean;
   error: string | null;
-  fetchAllDailyReports: () => void;
-  fetchAllHourlyReports: () => void;
+  fetchAllReports: () => void;
   deleteReport: (id: number) => void;
-  updateReport: (id: number, updatedReport: Partial<DailyReport>) => void;
-  refetchDailyReports: () => void;
-  refetchHourlyReports: () => void;
+  updateReport: (id: number, updatedReport: Partial<Report>) => void;
+  refetchReports: () => void;
+  createReport: (data: CreateReportData) => Promise<void>;
 };
 
 export const ReportContext = createContext<ReportContext>({
-  dailyReports: [],
-  hourlyReports: [],
+  Reports: [],
   loading: false,
   error: null,
-  fetchAllDailyReports: () => {},
-  fetchAllHourlyReports: () => {},
+  fetchAllReports: () => {},
   deleteReport: () => {},
   updateReport: () => {},
-  refetchDailyReports: () => {},
-  refetchHourlyReports: () => {},
+  refetchReports: () => {},
+  createReport: async () => {},
 });
 
 export const ReportProvider = ({ children }: ReportProviderProps) => {
-  const [dailyReports, setDailyReports] = useState<DailyReport[]>([]);
-  const [hourlyReports, setHourlyReports] = useState<HourlyReport[]>([]);
+  const [Reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAllHourlyReports = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axios.get(`${apiUrl}/api/hourly`);
-      if (res.status === 200) {
-        setHourlyReports(res.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch hourly reports", error);
-      setError("Failed to fetch hourly reports. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAllDailyReports = async () => {
+  const fetchAllReports = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await axios.get(`${apiUrl}/api/reports`);
       if (res.status === 200) {
-        setDailyReports(res.data);
+        setReports(res.data);
       }
     } catch (error) {
       console.error("Failed to fetch daily reports:", error);
@@ -78,7 +59,7 @@ export const ReportProvider = ({ children }: ReportProviderProps) => {
     try {
       const res = await axios.delete(`${apiUrl}/api/reports/${id}`);
       if (res.status === 200) {
-        fetchAllDailyReports();
+        fetchAllReports();
       }
     } catch (error) {
       console.error("Failed to delete report:", error);
@@ -88,15 +69,12 @@ export const ReportProvider = ({ children }: ReportProviderProps) => {
     }
   };
 
-  const updateReport = async (
-    id: number,
-    updatedReport: Partial<DailyReport>
-  ) => {
+  const updateReport = async (id: number, updatedReport: Partial<Report>) => {
     setLoading(true);
     try {
       const res = await axios.put(`${apiUrl}/api/reports/${id}`, updatedReport);
       if (res.status === 200) {
-        fetchAllDailyReports();
+        fetchAllReports();
       }
     } catch (error) {
       console.error("Failed to update report:", error);
@@ -106,24 +84,61 @@ export const ReportProvider = ({ children }: ReportProviderProps) => {
     }
   };
 
+  const createReport = async (reportData: CreateReportData) => {
+    setError(null);
+
+    try {
+      const response = await axios.post(`${apiUrl}/api/reports`, reportData, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      setReports((prev) => [...prev, response.data]);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || error.message;
+        setError(errorMessage);
+
+        console.error("Failed to create report:", {
+          error: error.response?.data,
+          statusCode: error.response?.status,
+          requestData: {
+            ...reportData,
+            password: undefined,
+            credentials: undefined,
+          },
+        });
+
+        if (error.response?.data?.errors) {
+          console.error("Validation errors:", error.response.data.errors);
+        }
+      } else {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to create Reports";
+        setError(errorMessage);
+        console.error("Failed to create report:", error);
+      }
+      throw error;
+    }
+  };
+
   useEffect(() => {
-    fetchAllDailyReports();
-    fetchAllHourlyReports();
+    fetchAllReports();
   }, []);
 
   return (
     <ReportContext.Provider
       value={{
-        dailyReports,
-        hourlyReports,
+        Reports,
         loading,
         error,
-        fetchAllDailyReports,
-        fetchAllHourlyReports,
+        fetchAllReports,
+        createReport,
         deleteReport,
         updateReport,
-        refetchDailyReports: fetchAllDailyReports,
-        refetchHourlyReports: fetchAllHourlyReports,
+        refetchReports: fetchAllReports,
       }}
     >
       {children}

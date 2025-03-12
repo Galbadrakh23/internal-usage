@@ -28,7 +28,9 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { user, fetchUser } = useContext(UserContext);
+  const userContext = useContext(UserContext);
+  const user = userContext?.user;
+  const fetchUser = userContext?.fetchUser;
 
   useEffect(() => {
     Cookies.remove("token");
@@ -38,7 +40,7 @@ const LoginPage = () => {
     setError(null);
     setIsLoading(true);
     if (!email || !password) {
-      setError("Please fill in all fields.");
+      setError("Бүх талбар бөглөх");
       setIsLoading(false);
       return;
     }
@@ -52,21 +54,26 @@ const LoginPage = () => {
         // Ensure the token is stored before fetching the user
         Cookies.set("token", token, { sameSite: "strict" });
         // Fetch the new user's data
-        await fetchUser();
+        if (fetchUser) {
+          await fetchUser();
+        }
         // FetchUser is async, ensure the latest user data before showing toast
         setTimeout(() => {
-          toast.success("Login successful!", {
-            description: `Welcome back! ${user?.name || ""}`,
+          toast.success("Амжилттай нэвтэрлээ!", {
+            description: `Тавтай морилно уу! ${user?.name || ""}`,
           });
           router.push("/dashboard");
         }, 500);
       } else {
-        setError(response.data.message || "Login failed. Please try again.");
+        setError(
+          response.data.message || "Нэвтрэхэд алдаа гарлаа. Дахин оролдоно уу."
+        );
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
         setError(
-          err.response.data.message || "Login failed. Please try again."
+          err.response.data.message ||
+            "Нэвтрэхэд алдаа гарлаа. Дахин оролдоно уу."
         );
       } else {
         setError("An error occurred. Please try again.");

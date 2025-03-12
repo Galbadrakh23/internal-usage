@@ -3,12 +3,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ReportProvider } from "@/context/ReportProvider";
-import { CreateReportProvider } from "@/context/CreateReportProvider";
 import { UserProvider } from "@/context/UserProvider";
-import { CreateReportHProvider } from "@/context/CreateReportHProvider";
 import { EmployeeProvider } from "@/context/EmployeeProvider";
 import { DeliveryProvider } from "@/context/DeliveryProvider";
 import { JobRequestProvider } from "@/context/JobRequestProvider";
+import { PatrolProvider } from "@/context/PatrolProvider";
+import { MealCountProvider } from "@/context/MealCountProvider";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -38,13 +38,13 @@ export default function RootLayout({
         <UserProvider>
           <JobRequestProvider>
             <ReportProvider>
-              <CreateReportProvider>
-                <CreateReportHProvider>
-                  <DeliveryProvider>
+              <DeliveryProvider>
+                <PatrolProvider>
+                  <MealCountProvider>
                     <EmployeeProvider>{children}</EmployeeProvider>
-                  </DeliveryProvider>
-                </CreateReportHProvider>
-              </CreateReportProvider>
+                  </MealCountProvider>
+                </PatrolProvider>
+              </DeliveryProvider>
             </ReportProvider>
           </JobRequestProvider>
         </UserProvider>

@@ -71,6 +71,8 @@ export const DeliveryProvider = ({
       setDeliveries((prev) => [...prev, data]);
       return data;
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+      }
       const errorMessage =
         error instanceof Error ? error.message : "Failed to create delivery";
       setError(errorMessage);

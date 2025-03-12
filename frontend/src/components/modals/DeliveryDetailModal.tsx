@@ -1,15 +1,27 @@
 "use client";
 
+import type * as React from "react";
+import {
+  ArchiveIcon,
+  PinTopIcon,
+  PersonIcon,
+  MobileIcon,
+  CalendarIcon,
+  IdCardIcon,
+} from "@radix-ui/react-icons";
+
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Package, MapPin, Weight, User, PhoneCallIcon } from "lucide-react";
 import type { TrackingItem } from "@/interface";
+import { useMemo } from "react";
+import DeliveryStatusUpdater from "@/components/data-table/Delivery-Status";
+
 interface DeliveryDetailsModalProps {
   open: boolean;
   onClose: () => void;
@@ -21,24 +33,29 @@ export function DeliveryDetailsModal({
   onClose,
   delivery,
 }: DeliveryDetailsModalProps) {
+  const statusTranslations = useMemo(
+    () => ({
+      DELIVERED: "Хүргэгдсэн",
+      PENDING: "Үлдээсэн",
+    }),
+    []
+  );
   if (!delivery) return null;
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toUpperCase()) {
       case "DELIVERED":
-        return "bg-green-500";
-      case "IN_TRANSIT":
-        return "bg-blue-500";
+        return "bg-emerald-500";
       case "PENDING":
-        return "bg-yellow-500";
+        return "bg-amber-500";
       default:
-        return "bg-gray-500";
+        return "bg-slate-500";
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[420px]">
+      <DialogContent className="sm:max-w-[425px] md:max-w-[500px] p-6">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
             Дэлгэрэнгүй мэдээлэл
@@ -46,82 +63,106 @@ export function DeliveryDetailsModal({
         </DialogHeader>
         <div className="grid gap-6 py-4">
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className="text-md font-semibold">
+            <Badge
+              variant="default"
+              className="text-md font-semibold px-3 py-1.5"
+              aria-label="Tracking number"
+            >
               {delivery.trackingNo}
             </Badge>
-            <Badge className={`${getStatusColor(delivery.status)} text-white`}>
-              {delivery.status}
-            </Badge>
-          </div>
-          <Separator />
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <Package className="h-5 w-5 text-gray-500" />
-              <div>
-                <p className="text-sm font-medium text-gray-500">Тайлбар</p>
-                <p className="text-lg font-semibold">{delivery.itemName}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <MapPin className="h-5 w-5 text-gray-500" />
-              <div>
-                <p className="text-sm font-medium text-gray-500">
-                  Өгөх байршил
-                </p>
-                <p className="text-lg font-semibold">{delivery.location}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <User className="h-5 w-5 text-gray-500" />
-              <div>
-                <p className="text-sm font-medium text-gray-500">
-                  Хүлээн авагч
-                </p>
-                <p className="text-lg font-semibold">{delivery.receiverName}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Weight className="h-5 w-5 text-gray-500" />
-              <div>
-                <p className="text-sm font-medium text-gray-500">Жин</p>
-                <p className="text-lg font-semibold">{delivery.weight} kg</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <PhoneCallIcon className="h-5 w-5 text-gray-500" />
-              <div>
-                <p className="text-sm font-medium text-gray-500">
-                  Илгээгчийн мэдээлэл
-                </p>
-                <p className="text-lg font-semibold">
-                  {delivery.senderName}
-                  <span className="mx-1"> </span>
-                  {delivery.senderPhone}
-                </p>
-              </div>
+            <div className="flex items-center">
+              <Badge
+                className={`${getStatusColor(
+                  delivery.status
+                )} text-white px-3 py-1.5`}
+                aria-label={`Status: ${delivery.status}`}
+              >
+                {statusTranslations[delivery.status]}
+              </Badge>
+              <DeliveryStatusUpdater deliveryId={delivery.id} />
             </div>
           </div>
           <Separator />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">
-                  Үүсгэсэн ажилтан
-                </p>
-                <p className="font-semibold">{delivery.user?.name}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-500">
-                Бүртгэсэн огноо
-              </p>
-              <p className="font-semibold">
-                {new Date(delivery.createdAt).toLocaleString()}
-              </p>
-            </div>
+          <div className="space-y-5">
+            <InfoRow
+              icon={ArchiveIcon}
+              label="Тайлбар"
+              value={delivery.itemName}
+            />
+            <InfoRow
+              icon={PinTopIcon}
+              label="Өгөх байршил"
+              value={delivery.location}
+            />
+            <InfoRow
+              icon={PersonIcon}
+              label="Хүлээн авагч"
+              value={delivery.receiverName}
+            />
+            <InfoRow
+              icon={MobileIcon}
+              label="Илгээгчийн мэдээлэл"
+              value={
+                <>
+                  <span className="font-semibold">{delivery.senderName}</span>
+                  <span className="mx-1 text-muted-foreground">•</span>
+                  <span>{delivery.senderPhone}</span>
+                </>
+              }
+            />
+          </div>
+          <Separator />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InfoRow
+              icon={IdCardIcon}
+              label="Үүсгэсэн ажилтан"
+              value={delivery.user?.name || "N/A"}
+              className="md:col-span-1"
+            />
+            <InfoRow
+              icon={CalendarIcon}
+              label="Бүртгэсэн огноо"
+              value={formatDate(new Date(delivery.createdAt))}
+              className="md:col-span-1 md:justify-self-end"
+            />
           </div>
         </div>
       </DialogContent>
     </Dialog>
   );
+}
+
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+  className = "",
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`flex items-start gap-4 ${className}`}>
+      <div className="mt-0.5">
+        <Icon className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+      </div>
+      <div className="flex-1">
+        <p className="text-sm font-medium text-muted-foreground mb-1">
+          {label}
+        </p>
+        <div className="text-base font-semibold">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function formatDate(date: Date): string {
+  try {
+    return date.toLocaleString("mn-MN");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    return "Invalid date";
+  }
 }

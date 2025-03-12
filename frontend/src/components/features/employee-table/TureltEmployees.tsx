@@ -148,7 +148,7 @@ const TureltEmployeeTable: React.FC<TureltEmployeeTableProps> = ({
                         <td className="border px-4 py-2 text-center">
                           <Badge
                             variant={
-                              employee.isAvailable ? "default" : "secondary"
+                              employee.isAvailable ? "default" : "success"
                             }
                             className="cursor-pointer"
                             onClick={() => toggleAvailability(employee.id)}

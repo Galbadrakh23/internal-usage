@@ -3,29 +3,44 @@
 import { useContext, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReportContext } from "@/context/ReportProvider";
-import { Clock, FileText, AlertCircle, User } from "lucide-react";
+import { DeliveryContext } from "@/context/DeliveryProvider";
+import { PatrolContext } from "@/context/PatrolProvider";
+import { Clock, AlertCircle, User, Truck, Shield } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+
 type Activity = {
   title: string;
-  type: "daily" | "hourly";
   createdAt: Date;
   updatedAt: Date;
   user: { name: string };
+  type: "report" | "delivery" | "patrol";
 };
 
 const RecentActivity = () => {
-  const { dailyReports, hourlyReports } = useContext(ReportContext);
+  const { Reports } = useContext(ReportContext);
+  const { deliveries } = useContext(DeliveryContext);
+  const { patrols } = useContext(PatrolContext);
 
   const activities = useMemo(() => {
     const allActivities: Activity[] = [
-      ...(dailyReports?.map((report) => ({
+      ...(Reports?.map((report) => ({
         ...report,
-        type: "daily" as const,
+        type: "report" as const,
+        createdAt: new Date(report.createdAt),
       })) || []),
-      ...(hourlyReports?.map((report) => ({
-        ...report,
-        type: "hourly" as const,
+      ...(deliveries?.map((delivery) => ({
+        ...delivery,
+        title: delivery.itemName,
+        updatedAt: new Date(),
+        createdAt: new Date(delivery.createdAt),
+        type: "delivery" as const,
+      })) || []),
+      ...(patrols?.map((patrol) => ({
+        ...patrol,
+        title: patrol.property.name,
+        updatedAt: new Date(),
+        createdAt: new Date(patrol.createdAt),
+        type: "patrol" as const,
       })) || []),
     ];
 
@@ -34,8 +49,8 @@ const RecentActivity = () => {
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
-      .slice(0, 7);
-  }, [dailyReports, hourlyReports]);
+      .slice(0, 10);
+  }, [Reports, deliveries, patrols]);
 
   return (
     <Card className="mt-8">
@@ -73,42 +88,48 @@ const ActivityList = ({ activities }: { activities: Activity[] }) => (
   </ul>
 );
 
-const ActivityItem = ({ activity }: { activity: Activity }) => (
-  <li className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
-    <ActivityIcon type={activity.type} />
-    <div className="flex-1 min-w-0">
-      <p className="text-sm font-medium text-gray-900 truncate">
-        {activity.title}
-      </p>
-      <div className="flex items-center gap-2 mt-1">
-        <ActivityBadge type={activity.type} />
-        <RelativeTime date={activity.createdAt} />
+const ActivityItem = ({ activity }: { activity: Activity }) => {
+  const getActivityIcon = (type: Activity["type"]) => {
+    switch (type) {
+      case "delivery":
+        return <Truck className="h-4 w-4 text-blue-500" />;
+      case "patrol":
+        return <Shield className="h-4 w-4 text-green-500" />;
+      case "report":
+        return <Clock className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  return (
+    <li className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+      <div className="flex items-center gap-2">
+        {getActivityIcon(activity.type)}
       </div>
-    </div>
-    <UserInfo name={activity.user.name} />
-  </li>
-);
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-900 truncate">
+          {activity.title}
+        </p>
+        <div className="flex items-center gap-2 mt-1">
+          <RelativeTime date={activity.createdAt} />
+          <span className="text-xs text-gray-400">•</span>
+          <ActivityType type={activity.type} />
+        </div>
+      </div>
+      <UserInfo name={activity.user.name} />
+    </li>
+  );
+};
 
-const ActivityIcon = ({ type }: { type: "daily" | "hourly" }) => (
-  <div className="flex-shrink-0">
-    <div className="p-2 rounded-full bg-gray-100">
-      {type === "hourly" ? (
-        <Clock className="h-5 w-5 text-gray-600" />
-      ) : (
-        <FileText className="h-5 w-5 text-gray-600" />
-      )}
-    </div>
-  </div>
-);
+const ActivityType = ({ type }: { type: Activity["type"] }) => {
+  const typeLabels = {
+    daily: "Өдрийн тайлан",
+    delivery: "Хүргэлт",
+    patrol: "Эргүүл",
+    report: "Тайлан",
+  };
 
-const ActivityBadge = ({ type }: { type: "daily" | "hourly" }) => (
-  <Badge
-    variant={type === "daily" ? "default" : "secondary"}
-    className="text-xs"
-  >
-    {type === "daily" ? "Өдрийн" : "Цагийн"}
-  </Badge>
-);
+  return <span className="text-xs text-gray-500">{typeLabels[type]}</span>;
+};
 
 const RelativeTime = ({ date }: { date: Date }) => {
   const getRelativeTime = (timestamp: Date) => {
