@@ -5,7 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReportContext } from "@/context/ReportProvider";
 import { DeliveryContext } from "@/context/DeliveryProvider";
 import { PatrolContext } from "@/context/PatrolProvider";
-import { Clock, AlertCircle, User, Truck, Shield } from "lucide-react";
+import {
+  Clock,
+  AlertCircle,
+  Truck,
+  Shield,
+  Activity,
+  CalendarCheck,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type Activity = {
@@ -17,13 +24,13 @@ type Activity = {
 };
 
 const RecentActivity = () => {
-  const { Reports } = useContext(ReportContext);
+  const { reports } = useContext(ReportContext);
   const { deliveries } = useContext(DeliveryContext);
   const { patrols } = useContext(PatrolContext);
 
   const activities = useMemo(() => {
     const allActivities: Activity[] = [
-      ...(Reports?.map((report) => ({
+      ...(reports?.map((report) => ({
         ...report,
         type: "report" as const,
         createdAt: new Date(report.createdAt),
@@ -49,18 +56,18 @@ const RecentActivity = () => {
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
-      .slice(0, 10);
-  }, [Reports, deliveries, patrols]);
+      .slice(0, 7);
+  }, [reports, deliveries, patrols]);
 
   return (
     <Card className="mt-8">
       <CardHeader className="border-b">
-        <CardTitle className="flex items-center gap-6 text-lg font-medium text-gray-800">
+        <CardTitle className="flex items-center gap-4 text-md font-medium text-gray-800">
           <Clock className="h-5 w-5" />
           Cүүлд болсон үйл ажиллагаа
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="px-2">
         {activities.length === 0 ? (
           <EmptyState />
         ) : (
@@ -73,7 +80,7 @@ const RecentActivity = () => {
 
 const EmptyState = () => (
   <Alert className="m-4 bg-gray-50 text-gray-600 border-gray-200">
-    <AlertCircle className="h-4 w-4" />
+    <AlertCircle className="h-5 w-5" />
     <AlertDescription>
       Одоогоор ямар нэгэн үйл ажиллагаа бүртгэгдээгүй байна
     </AlertDescription>
@@ -92,11 +99,11 @@ const ActivityItem = ({ activity }: { activity: Activity }) => {
   const getActivityIcon = (type: Activity["type"]) => {
     switch (type) {
       case "delivery":
-        return <Truck className="h-4 w-4 text-blue-500" />;
+        return <Truck className="h-5 w-5 text-blue-500" />;
       case "patrol":
-        return <Shield className="h-4 w-4 text-green-500" />;
+        return <Shield className="h-5 w-5 text-green-500" />;
       case "report":
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <CalendarCheck className="h-5 w-5 text-gray-500" />;
     }
   };
 
@@ -115,7 +122,6 @@ const ActivityItem = ({ activity }: { activity: Activity }) => {
           <ActivityType type={activity.type} />
         </div>
       </div>
-      <UserInfo name={activity.user.name} />
     </li>
   );
 };
@@ -144,12 +150,5 @@ const RelativeTime = ({ date }: { date: Date }) => {
 
   return <p className="text-xs text-gray-500">{getRelativeTime(date)}</p>;
 };
-
-const UserInfo = ({ name }: { name: string }) => (
-  <div className="flex items-center gap-2">
-    <User className="h-4 w-4 text-gray-400" />
-    <span className="text-sm font-medium text-gray-700">{name}</span>
-  </div>
-);
 
 export default RecentActivity;

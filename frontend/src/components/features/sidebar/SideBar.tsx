@@ -9,7 +9,6 @@ import {
   Users,
   ChevronDown,
   Box,
-  MousePointer,
   Menu,
 } from "lucide-react";
 import {
@@ -29,6 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { DashboardIcon } from "@radix-ui/react-icons";
 interface MenuItem {
   title: string;
   url: string;
@@ -42,27 +42,14 @@ interface MenuCategory {
 
 const MENU_ITEMS: MenuCategory[] = [
   {
-    category: "Үндсэн",
+    category: "Менежмент",
     items: [
-      { title: "Нүүр хуудас", url: "/dashboard", icon: MousePointer },
+      { title: "Dashboard", url: "/dashboard", icon: DashboardIcon },
       {
         title: "Хүргэлтийн мэдээлэл",
         url: "/dashboard/delivery-board",
         icon: Box,
       },
-    ],
-  },
-  {
-    category: "Тайлан",
-    items: [
-      { title: "Нийт тайлан", url: "/dashboard/report-board", icon: Clock },
-      { title: "Хоолны тоо", url: "/dashboard/meal-count", icon: Utensils },
-      { title: "Патрол чек", url: "/dashboard/patrol-check", icon: Shield },
-    ],
-  },
-  {
-    category: "Менежмент",
-    items: [
       {
         title: "Ажил бүртгэл",
         url: "/dashboard/job-request",
@@ -73,6 +60,14 @@ const MENU_ITEMS: MenuCategory[] = [
         url: "/dashboard/employee-table",
         icon: Users,
       },
+    ],
+  },
+  {
+    category: "Тайлан",
+    items: [
+      { title: "Нийт тайлан", url: "/dashboard/report-board", icon: Clock },
+      { title: "Хоолны тоо", url: "/dashboard/meal-count", icon: Utensils },
+      { title: "Патрол чек", url: "/dashboard/patrol-check", icon: Shield },
     ],
   },
 ];

@@ -14,10 +14,17 @@ router.get("/users", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch users" });
   }
 });
+router.put("/users/:id", async (req, res) => {
+  try {
+    await updateUser(req, res);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update user" });
+  }
+});
 
 router.delete("/users/:id", async (req, res) => {
   try {
-    await deleteUser(req, res); // This function is not defined
+    await deleteUser(req, res);
   } catch (error) {
     res.status(500).json({ error: "Failed to delete user" });
   }
@@ -25,7 +32,7 @@ router.delete("/users/:id", async (req, res) => {
 
 router.patch("/users/:id", async (req, res) => {
   try {
-    await updateUser(req, res); // This function is not defined
+    await updateUser(req, res);
   } catch (error) {
     res.status(500).json({ error: "Failed to update user" });
   }

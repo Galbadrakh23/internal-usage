@@ -11,6 +11,8 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { UserContext } from "@/context/UserProvider";
 import { Button } from "@/components/ui/button";
+import { PlusIcon } from "@radix-ui/react-icons";
+
 import {
   Dialog,
   DialogContent,
@@ -182,19 +184,12 @@ export function ReportModal() {
           variant="outline"
           className="gap-2 hover:bg-primary/10 transition-all duration-200 rounded-lg"
         >
-          <span className="text-lg font-medium">+</span>
+          <PlusIcon className="h-4 w-4" />
           <span>Шинэ тайлан</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px] p-6 rounded-xl border shadow-lg animate-in fade-in-0 zoom-in-95 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-200">
+      <DialogContent className="sm:max-w-[450px] p-6 rounded-xl border shadow-lg animate-in fade-in-0 zoom-in-95 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-200">
         <DialogHeader className="mb-5 relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setOpen(false)}
-            className="absolute right-0 top-0 rounded-full h-8 w-8 hover:bg-muted transition-colors"
-            aria-label="Close dialog"
-          ></Button>
           <DialogTitle className="text-xl font-bold">
             Шинэ тайлан оруулах
           </DialogTitle>

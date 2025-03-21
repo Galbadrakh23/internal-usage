@@ -1,9 +1,16 @@
 "use client";
 
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+} from "react";
 import axios from "axios";
 import { apiUrl } from "@/utils/utils";
 import { User } from "@/interface";
+
 interface UserContextType {
   user: User | null;
   userId: string;
@@ -20,7 +27,6 @@ interface UserContextType {
     role: string
   ) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
-  toggleUserStatus: (userId: string, currentStatus: string) => Promise<void>;
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
 }
 
@@ -34,12 +40,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchUser();
-    fetchUsers();
-  }, []);
-
-  const fetchUser = async () => {
+  // Memoized fetchUser function
+  const fetchUser = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data } = await axios.get(`${apiUrl}/api/verify`, {
@@ -52,9 +54,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchUsers = async () => {
+  // Memoized fetchUsers function
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data } = await axios.get(`${apiUrl}/api/users`, {
@@ -67,7 +70,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchUser();
+    fetchUsers();
+  }, [fetchUser, fetchUsers]); // Runs only once due to useCallback
 
   const logout = async () => {
     try {
@@ -102,61 +110,25 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       console.error(error);
     }
   };
-
   const deleteUser = async (userId: string) => {
     try {
       await axios.delete(`${apiUrl}/api/users/${userId}`);
-      setUsers((prev) => prev.filter((user) => user.id !== userId));
+      await fetchUsers(); // Fetch updated user list after delete
     } catch (error) {
       setError("Failed to delete user");
       console.error(error);
     }
   };
 
-  const toggleUserStatus = async (userId: string, currentStatus: string) => {
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+  const updateUser = async (userId: string, userData: Partial<User>) => {
     try {
-      await axios.patch(`${apiUrl}/api/users/${userId}/status`, {
-        status: newStatus,
-      });
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === userId ? { ...user, status: newStatus } : user
-        )
-      );
+      await axios.put(`${apiUrl}/api/users/${userId}`, userData);
+      await fetchUsers(); // Ensure fresh data is fetched
     } catch (error) {
-      setError("Failed to update user status");
+      setError("Failed to update user");
       console.error(error);
     }
   };
-
-  const updateUser = async (userId: string, userData: Partial<User>) => {
-    try {
-      const response = await axios.patch(
-        `${apiUrl}/api/users/${userId}`,
-        userData
-      );
-      const updatedUser = response.data;
-
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === userId ? { ...user, ...updatedUser } : user
-        )
-      );
-    } catch (error) {
-      setError("Failed to update user");
-
-      if (axios.isAxiosError(error)) {
-        console.error("API Error:", error.response?.data || error.message);
-      } else {
-        console.error("Unexpected Error:", error);
-      }
-    }
-  };
-  useEffect(() => {
-    fetchUser();
-    fetchUsers();
-  }, []);
 
   return (
     <UserContext.Provider
@@ -171,7 +143,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         logout,
         createUser,
         deleteUser,
-        toggleUserStatus,
         updateUser,
       }}
     >

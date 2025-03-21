@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 8023;
 
 app.get("/", (_, res) => {
   res.send("Welcome Internal Usage API");

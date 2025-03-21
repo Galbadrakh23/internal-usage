@@ -3,6 +3,40 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+export const getMealsCount = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+
+    const mealCounts = await prisma.mealCount.findMany({
+      skip: offset,
+      take: limit,
+      select: {
+        id: true,
+        date: true,
+        breakfast: true,
+        lunch: true,
+        dinner: true,
+      },
+    });
+    // Get total count for pagination info
+    const totalCount = await prisma.mealCount.count();
+    res.status(200).json({
+      data: mealCounts,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+        totalItems: totalCount,
+        hasNextPage: offset + limit < totalCount,
+        hasPrevPage: page > 1,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to fetch meal counts" });
+  }
+};
+
 export const getMealCountByDate = async (req: Request, res: Response) => {
   try {
     const { date } = req.params;

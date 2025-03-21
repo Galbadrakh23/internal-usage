@@ -1,20 +1,15 @@
 "use client";
-import EmployeeTable from "@/components/features/employee-table/EmployeeTable";
-import { EmployeeContext } from "@/context/EmployeeProvider";
-import { useContext } from "react";
-import PageHeader from "@/components/buttons/PageHeader";
+import PageHeader from "@/components/layout_components/PageHeader";
+import EmployeeInformationPanel from "@/components/features/employee-table/EmployeeTable";
 
 export default function Employee() {
-  const { employees } = useContext(EmployeeContext);
-
   return (
-    <main className="flex-1 space-y-4">
-      <div className="flex flex-col gap-4">
+    <main className="flex-1 space-y-2">
+      <div className="flex flex-col gap-2">
         <PageHeader title="Ажилтны мэдээлэл" />
       </div>
-      <div className="mb-6 flex items-center gap-4">
-        <EmployeeTable data={employees} />
-      </div>
+      <EmployeeInformationPanel />
+      <div className="flex items-center justify-center"></div>
     </main>
   );
 }

@@ -3,10 +3,17 @@ import { PrismaClient, Prisma } from "@prisma/client"; // ✅ Import Prisma
 
 const prisma = new PrismaClient();
 
-// ✅ Get All Patrols
 export const getAllPatrols = async (req: Request, res: Response) => {
   try {
+    // Get pagination parameters from query (default: page 1, limit 10)
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+
+    // Fetch patrols with pagination
     const patrols = await prisma.patrolCheck.findMany({
+      skip: offset,
+      take: limit,
       select: {
         id: true,
         notes: true,
@@ -18,7 +25,20 @@ export const getAllPatrols = async (req: Request, res: Response) => {
         property: { select: { name: true } },
       },
     });
-    res.status(200).json(patrols);
+
+    // Get total count for pagination info
+    const totalPatrols = await prisma.patrolCheck.count();
+
+    res.status(200).json({
+      data: patrols,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalPatrols / limit),
+        totalItems: totalPatrols,
+        hasNextPage: offset + limit < totalPatrols,
+        hasPrevPage: page > 1,
+      },
+    });
   } catch (error) {
     console.error("Error fetching patrols:", error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -55,7 +75,6 @@ export const createPatrol = async (req: Request, res: Response) => {
       checkPoint,
       status,
       notes,
-      imagePath,
       checkedBy,
       propertyId,
       totalCheckPoint,
@@ -83,7 +102,6 @@ export const createPatrol = async (req: Request, res: Response) => {
         checkPoint,
         status,
         notes: notes || null,
-        imagePath: imagePath || null,
         checkedBy,
         propertyId,
         totalCheckPoint,

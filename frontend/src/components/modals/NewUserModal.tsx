@@ -10,10 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, PlusCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useState, ChangeEvent, FormEvent } from "react";
 import { useUsers } from "@/context/UserProvider";
 import { Button } from "@/components/ui/button";
+import { PlusIcon } from "@radix-ui/react-icons";
 
 export default function NewUserModal() {
   const { createUser } = useUsers();
@@ -44,7 +45,6 @@ export default function NewUserModal() {
       setFormError("Бүх талбарыг бөглөнө үү");
       return;
     }
-
     try {
       await createUser(
         formData.name,
@@ -67,9 +67,8 @@ export default function NewUserModal() {
   return (
     <Dialog open={showDialog} onOpenChange={setShowDialog}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
-          <PlusCircle size={12} />
-          <span>Шинэ бүртгэл</span>
+        <Button variant="outline" className="flex items-center gap-2">
+          <PlusIcon className="mr-1 h-4 w-4" /> <span>Шинэ бүртгэл</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

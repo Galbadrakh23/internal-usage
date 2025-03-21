@@ -17,9 +17,6 @@ model User {
   ReportComments     Comment[]
   records            Record[]
   Report             Report[]
-  deliveryItems      DeliveryItem[]
-  jobRequestComments JobRequestComment[]
-  jobRequests        JobRequest[]
   patrolChecks       PatrolCheck[]
 }
 
@@ -112,7 +109,6 @@ model DeliveryItem {
   userId        String
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  user          User           @relation(fields: [userId], references: [id])
 
   @@index([trackingNo])
   @@index([status])
@@ -128,34 +124,17 @@ model JobRequest {
   category    String
   location    String
   assignedTo  String?
-  requestedBy String
+  requestedBy String?
   dueDate     DateTime?
   completedAt DateTime?
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
-  comments    JobRequestComment[]
-  user        User                @relation(fields: [requestedBy], references: [id])
 
   @@index([status])
   @@index([priority])
   @@index([requestedBy])
   @@map("job_requests")
 }
-
-model JobRequestComment {
-  id           String     @id @default(cuid())
-  content      String
-  jobRequestId String
-  userId       String
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  jobRequest   JobRequest @relation(fields: [jobRequestId], references: [id], onDelete: Cascade)
-  user         User       @relation(fields: [userId], references: [id])
-
-  @@index([jobRequestId])
-  @@map("job_request_comments")
-}
-
 model Property {
   id           String        @id @default(uuid())
   name         String

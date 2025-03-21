@@ -13,8 +13,8 @@ export default function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <div className="mb-8">
-      <div className="flex items-center gap-6 ">
+    <div className="mb-2">
+      <div className="flex items-center ml-2">
         {backHref && (
           <Link
             href={backHref}

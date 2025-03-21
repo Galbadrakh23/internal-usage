@@ -12,7 +12,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UserContext } from "@/context/UserProvider";
@@ -28,7 +27,7 @@ const Header = () => {
   };
   return (
     <header className="flex items-center justify-between mb-8 px-4 py-2">
-      <div className="flex items-center gap-8">
+      <div className="flex items-center ml-10">
         <Link href="/dashboard">
           <Image
             src="/Turelt-Logo.png"
@@ -51,7 +50,6 @@ const Header = () => {
                   height={32}
                   className="rounded-full ring-2 ring-zinc-100 dark:ring-zinc-800"
                 />
-                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-1 ring-white dark:ring-zinc-900" />
               </div>
               <span className="hidden md:inline-block font-medium">
                 {user?.name}
@@ -59,7 +57,7 @@ const Header = () => {
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 p-2">
+          <DropdownMenuContent align="end" className="w-48">
             {/* Profile Header */}
             <div className="flex items-center gap-3 p-2 mb-1">
               <div className="relative shrink-0">
@@ -81,10 +79,6 @@ const Header = () => {
                 </p>
               </div>
             </div>
-
-            <DropdownMenuSeparator />
-            <DropdownMenuSeparator />
-
             {/* Logout */}
             <DropdownMenuItem
               className="flex items-center gap-2 cursor-pointer px-2 py-1.5 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"

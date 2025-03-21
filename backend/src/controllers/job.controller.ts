@@ -4,7 +4,13 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 export const getAllJobRequests = async (req: Request, res: Response) => {
   try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+
     const jobRequests = await prisma.jobRequest.findMany({
+      skip: offset,
+      take: limit,
       select: {
         id: true,
         title: true,
@@ -18,30 +24,24 @@ export const getAllJobRequests = async (req: Request, res: Response) => {
         completedAt: true,
         createdAt: true,
         updatedAt: true,
-        user: {
-          select: {
-            name: true,
-            role: true,
-            email: true,
-          },
-        },
-        comments: {
-          select: {
-            id: true,
-            content: true,
-            createdAt: true,
-            user: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
       },
     });
-    return res.status(200).json(jobRequests);
+    // Get total count for pagination info
+    const totalJobRequests = await prisma.jobRequest.count();
+
+    res.status(200).json({
+      data: jobRequests,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalJobRequests / limit),
+        totalItems: totalJobRequests,
+        hasNextPage: offset + limit < totalJobRequests,
+        hasPrevPage: page > 1,
+      },
+    });
   } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error fetching Job Requests:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -80,18 +80,6 @@ export const createJobRequest = async (req: Request, res: Response) => {
       });
     }
 
-    // Check if the user exists
-    const user = await prisma.user.findUnique({
-      where: { id: requestedBy },
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid user ID",
-      });
-    }
-
     const jobRequest = await prisma.jobRequest.create({
       data: {
         title,
@@ -102,7 +90,7 @@ export const createJobRequest = async (req: Request, res: Response) => {
         location,
         assignedTo: assignedTo || null,
         dueDate: dueDate ? new Date(dueDate) : null,
-        requestedBy,
+        requestedBy: requestedBy || null,
       },
     });
 
@@ -119,41 +107,30 @@ export const createJobRequest = async (req: Request, res: Response) => {
   }
 };
 
-// Update a job request's status and handle completion date
-export const updateJobRequest = async (req: Request, res: Response) => {
+export const updateJobStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const {
-      title,
-      description,
-      priority,
-      status,
-      category,
-      location,
-      assignedTo,
-      dueDate,
-    } = req.body;
+    const { status } = req.body;
 
-    if (!id) {
+    const validStatuses = ["PENDING", "CANCELED", "COMPLETED"];
+    if (!id || !status) {
       return res.status(400).json({
         success: false,
-        message: "Job request ID is required",
+        message: "Job request ID and status are required",
+      });
+    }
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid status. Allowed statuses: PENDING, CANCELED, COMPLETED",
       });
     }
 
-    // Prepare update data
-    const updateData: any = {
-      ...(title && { title }),
-      ...(description && { description }),
-      ...(priority && { priority }),
-      ...(status && { status }),
-      ...(category && { category }),
-      ...(location && { location }),
-      ...(assignedTo && { assignedTo }),
-      ...(dueDate && { dueDate: new Date(dueDate) }),
-    };
+    console.log("Updating job ID:", id, "to status:", status); // Debugging log
 
-    // Add completedAt date if status is being set to COMPLETED
+    // Use Prisma.DbNull for `NULL`
+    const updateData: any = { status, completedAt: null };
     if (status === "COMPLETED") {
       updateData.completedAt = new Date();
     }
@@ -163,15 +140,19 @@ export const updateJobRequest = async (req: Request, res: Response) => {
       data: updateData,
     });
 
+    console.log("Updated job request:", updatedJobRequest); // Debugging log
+
     return res.status(200).json({
       success: true,
-      message: "Job request updated successfully",
+      message: `Job status updated to ${status} successfully`,
       data: updatedJobRequest,
     });
   } catch (error) {
+    console.error("Prisma update error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to update job request",
+      message: "Failed to update job status",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -188,45 +169,5 @@ export const deleteJobRequest = async (req: Request, res: Response) => {
     });
   } catch (error) {
     return res.status(500).json({ message: "Error deleting job request" });
-  }
-};
-
-// Add a comment to a job request
-export const addJobRequestComment = async (req: Request, res: Response) => {
-  try {
-    const { content, userId } = req.body;
-    const { jobRequestId } = req.params;
-
-    if (!content?.trim() || !userId || !jobRequestId) {
-      return res.status(400).json({
-        success: false,
-        message: "Content, user ID, and job request ID are required",
-      });
-    }
-
-    const comment = await prisma.jobRequestComment.create({
-      data: {
-        content,
-        userId,
-        jobRequestId,
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
-
-    return res.status(201).json({
-      success: true,
-      data: comment,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to add comment",
-    });
   }
 };

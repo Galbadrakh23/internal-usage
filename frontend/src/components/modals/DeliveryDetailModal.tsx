@@ -20,7 +20,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import type { TrackingItem } from "@/interface";
 import { useMemo } from "react";
-import DeliveryStatusUpdater from "@/components/data-table/Delivery-Status";
 
 interface DeliveryDetailsModalProps {
   open: boolean;
@@ -36,7 +35,7 @@ export function DeliveryDetailsModal({
   const statusTranslations = useMemo(
     () => ({
       DELIVERED: "Хүргэгдсэн",
-      PENDING: "Үлдээсэн",
+      PENDING: "Хүлээгдэж буй",
     }),
     []
   );
@@ -79,7 +78,6 @@ export function DeliveryDetailsModal({
               >
                 {statusTranslations[delivery.status]}
               </Badge>
-              <DeliveryStatusUpdater deliveryId={delivery.id} />
             </div>
           </div>
           <Separator />

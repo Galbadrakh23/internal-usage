@@ -5,7 +5,14 @@ const prisma = new PrismaClient();
 
 export const getAllDeliveries = async (req: Request, res: Response) => {
   try {
+    // Get pagination parameters from query (default: page 1, limit 10)
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 15;
+    const offset = (page - 1) * limit;
+
     const deliveries = await prisma.deliveryItem.findMany({
+      skip: offset,
+      take: limit,
       select: {
         id: true,
         trackingNo: true,
@@ -18,16 +25,24 @@ export const getAllDeliveries = async (req: Request, res: Response) => {
         notes: true,
         createdAt: true,
         updatedAt: true,
-        user: {
-          select: {
-            name: true,
-          },
-        },
       },
     });
-    return res.status(200).json(deliveries);
+    // Get total count for pagination info
+    const totalDeliveries = await prisma.deliveryItem.count();
+
+    res.status(200).json({
+      data: deliveries,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalDeliveries / limit),
+        totalItems: totalDeliveries,
+        hasNextPage: offset + limit < totalDeliveries,
+        hasPrevPage: page > 1,
+      },
+    });
   } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error fetching patrols:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

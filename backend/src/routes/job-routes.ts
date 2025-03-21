@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getAllJobRequests,
   createJobRequest,
+  updateJobStatus,
 } from "../controllers/job.controller";
 const router = Router();
 
@@ -17,6 +18,13 @@ router.post("/job-requests", async (req, res) => {
     await createJobRequest(req, res);
   } catch (error) {
     res.status(500).json({ error: "Failed to create job request " });
+  }
+});
+router.put("/job-requests/:id", async (req, res) => {
+  try {
+    await updateJobStatus(req, res);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update job request" });
   }
 });
 

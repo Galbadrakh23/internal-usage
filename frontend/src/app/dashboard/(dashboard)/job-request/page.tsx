@@ -2,22 +2,37 @@
 import { useContext, useEffect } from "react";
 import { JobRequestContext } from "@/context/JobRequestProvider";
 import JobRequestTable from "@/components/job-request/job-request";
-import PageHeader from "@/components/buttons/PageHeader";
+import PageHeader from "@/components/layout_components/PageHeader";
+import Pagination from "@/components/features/pagination/Pagination";
 
 export default function JobRequestPage() {
-  const { jobRequests, fetchJobRequests } = useContext(JobRequestContext);
+  const { jobRequests, fetchJobRequests, pagination, isLoading } =
+    useContext(JobRequestContext);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 0 && newPage <= pagination.totalPages) {
+      fetchJobRequests(newPage);
+    }
+  };
 
   useEffect(() => {
     fetchJobRequests();
   }, [fetchJobRequests]);
 
   return (
-    <main className="flex-1 space-y-4">
-      <div className="flex flex-col gap-4">
+    <main className="flex-1 space-y-2">
+      <div className="flex flex-col gap-2">
         <PageHeader title="Ажлын хуудас" />
       </div>
-      <div className="items-center gap-4">
-        <JobRequestTable jobRequests={jobRequests} />
+      <JobRequestTable jobRequests={jobRequests} isLoading={isLoading} />
+      <div className="flex items-center justify-center">
+        {pagination.totalPages > 0 && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
       </div>
     </main>
   );

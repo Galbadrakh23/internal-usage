@@ -17,7 +17,14 @@ type CreatePatrolData = {
 type PatrolContextType = {
   patrols: Patrol[];
   isLoading: boolean;
-  fetchPatrols: () => Promise<void>;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+  fetchPatrols: (page?: number, limit?: number) => Promise<void>;
   createPatrol: (data: CreatePatrolData) => Promise<void>;
   updatePatrolStatus: (patrolId: string, status: string) => Promise<void>;
 };
@@ -28,21 +35,43 @@ export const PatrolContext = createContext<PatrolContextType>({
   fetchPatrols: async () => {},
   createPatrol: async () => {},
   updatePatrolStatus: async () => {},
+  pagination: {
+    currentPage: 0,
+    totalPages: 0,
+    totalItems: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  },
 });
 
 export const PatrolProvider = ({ children }: { children: React.ReactNode }) => {
   const [patrols, setPatrols] = useState<Patrol[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
 
-  const fetchPatrols = useCallback(async () => {
+  const fetchPatrols = useCallback(async (page = 1, limit = 10) => {
     setIsLoading(true);
     try {
       const { data } = await axios.get(`${apiUrl}/api/patrols`, {
+        params: { page, limit },
         withCredentials: true,
       });
 
-      if (Array.isArray(data)) {
-        setPatrols(data);
+      if (data?.data && Array.isArray(data.data)) {
+        setPatrols(data.data);
+        setPagination({
+          currentPage: data.pagination.currentPage,
+          totalPages: data.pagination.totalPages,
+          totalItems: data.pagination.totalItems,
+          hasNextPage: data.pagination.hasNextPage,
+          hasPrevPage: data.pagination.hasPrevPage,
+        });
       } else {
         console.error("Invalid patrol data format:", data);
         setPatrols([]);
@@ -124,6 +153,7 @@ export const PatrolProvider = ({ children }: { children: React.ReactNode }) => {
         patrols,
         createPatrol,
         isLoading,
+        pagination,
         fetchPatrols,
         updatePatrolStatus,
       }}

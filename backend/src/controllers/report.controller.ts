@@ -5,7 +5,13 @@ const prisma = new PrismaClient();
 
 export const getAllReports = async (req: Request, res: Response) => {
   try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+
     const reports = await prisma.report.findMany({
+      skip: offset,
+      take: limit,
       select: {
         id: true,
         title: true,
@@ -27,7 +33,18 @@ export const getAllReports = async (req: Request, res: Response) => {
         date: "desc",
       },
     });
-    return res.status(200).json(reports);
+
+    const totalReports = await prisma.report.count();
+
+    res.status(200).json({
+      data: reports,
+      pagination: {
+        currentPage: page,
+        pageSize: limit,
+        totalItems: totalReports,
+        totalPages: Math.ceil(totalReports / limit),
+      },
+    });
   } catch (error) {
     console.error("Error fetching reports:", error);
     return res.status(500).json({ message: "Internal Server Error" });

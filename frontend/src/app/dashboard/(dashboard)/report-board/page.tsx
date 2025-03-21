@@ -1,31 +1,38 @@
 "use client";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { ReportContext } from "@/context/ReportProvider";
 import TimeReport from "@/components/features/time-report/TimeReport";
-import { ReportModal } from "@/components/modals/NewReportModal";
-import PageHeader from "@/components/buttons/PageHeader";
+import PageHeader from "@/components/layout_components/PageHeader";
+import Pagination from "@/components/features/pagination/Pagination";
 
-export default function TimeReportPage() {
-  const reportContext = useContext(ReportContext);
+export default function ReportPage() {
+  const { reports, pagination, updateReport, fetchReports } =
+    useContext(ReportContext);
 
-  if (!reportContext) {
-    throw new Error("TimeReportPage must be wrapped in ReportProvider");
-  }
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 0 && newPage <= pagination.totalPages) {
+      fetchReports(newPage);
+    }
+  };
 
-  const { Reports, updateReport } = reportContext;
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   return (
-    <main className="flex-1 space-y-4">
-      <div className="flex flex-col gap-4">
+    <main className="flex-1 space-y-2">
+      <div className="flex flex-col gap-2">
         <PageHeader title="Нийт тайлан" />
-        <span className="flex gap-4">
-          <ReportModal />
-        </span>
-        {Reports ? (
-          <TimeReport Reports={Reports} updateReport={updateReport} />
-        ) : (
-          <p>Loading reports...</p>
-        )}
+        <TimeReport Reports={reports} updateReport={updateReport} />
+        <div className="flex items-center justify-center">
+          {pagination.totalPages > 0 && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+            />
+          )}
+        </div>
       </div>
     </main>
   );

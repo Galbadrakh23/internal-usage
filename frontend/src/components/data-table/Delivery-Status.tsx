@@ -1,15 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useContext } from "react";
+import { useState, useContext } from "react";
 import { DeliveryContext } from "@/context/DeliveryProvider";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -22,17 +19,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CircleEllipsis, Trash2Icon, CheckCircle2, Clock } from "lucide-react";
+import { MoreVertical, Trash2Icon, CheckCircle2, Clock } from "lucide-react";
 
-const DeliveryStatusUpdater = ({ deliveryId }: { deliveryId: string }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DeliveryStatusUpdater = ({ delivery }: { delivery: any }) => {
   const { updateDelivery, deleteDelivery } = useContext(DeliveryContext);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleStatusChange = async (newStatus: "PENDING" | "DELIVERED") => {
+    if (!delivery) return; // Ensure delivery is valid before updating
+
     try {
-      await updateDelivery(deliveryId, { status: newStatus });
-      setIsDropdownOpen(false);
+      await updateDelivery(delivery, { status: newStatus });
     } catch (error) {
       console.error("Failed to update status", error);
     }
@@ -40,7 +38,7 @@ const DeliveryStatusUpdater = ({ deliveryId }: { deliveryId: string }) => {
 
   const handleDelete = async () => {
     try {
-      await deleteDelivery(deliveryId);
+      await deleteDelivery(delivery);
       setIsDeleteDialogOpen(false);
     } catch (error) {
       console.error("Failed to delete delivery", error);
@@ -54,36 +52,39 @@ const DeliveryStatusUpdater = ({ deliveryId }: { deliveryId: string }) => {
 
   return (
     <>
-      <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <span className="sr-only">Цэс нээх</span>
-            <CircleEllipsis size={20} />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>Төлөв шинэчлэх</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {statusOptions.map(({ status, label, icon: Icon }) => (
-            <DropdownMenuItem
-              key={status}
-              onClick={() => handleStatusChange(status)}
-              className="flex items-center"
-            >
-              <Icon className="mr-2 h-4 w-4" />
-              <span>{label}</span>
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => setIsDeleteDialogOpen(true)}
-            className="text-destructive focus:text-destructive"
+      <div className="flex items-center gap-2">
+        {/* Status buttons */}
+        {statusOptions.map(({ status, icon: Icon }) => (
+          <Button
+            key={status} // Одоо "status" тодорхой болсон тул алдаа гарахгүй
+            variant={delivery.status === status ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleStatusChange(status)}
+            className="flex items-center gap-1"
           >
-            <Trash2Icon className="mr-2 h-4 w-4" />
-            <span>Устгах</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <Icon className="h-4 w-4" />
+          </Button>
+        ))}
+
+        {/* Delete option in a simple dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <span className="sr-only">Цэс нээх</span>
+              <MoreVertical size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2Icon className="mr-2 h-4 w-4" />
+              <span>Устгах</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       <AlertDialog
         open={isDeleteDialogOpen}

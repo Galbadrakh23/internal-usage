@@ -142,9 +142,7 @@ export function PatrolDetailsModal({
                 </div>
               </div>
             </div>
-
             <Separator />
-
             <div className="space-y-5">
               <InfoRow
                 icon={CrossCircledIcon}
@@ -157,7 +155,6 @@ export function PatrolDetailsModal({
             </div>
 
             <Separator />
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InfoRow
                 icon={IdCardIcon}

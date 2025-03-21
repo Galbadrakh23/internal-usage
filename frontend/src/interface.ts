@@ -28,13 +28,12 @@ export interface PaginationProps {
 }
 
 export interface Employee {
-  id: string | number;
+  id: string;
   name: string;
   position: string;
   email: string;
   company: {
     name: string;
-    // ... other company properties
   };
   phone: string;
 }
@@ -45,9 +44,11 @@ export interface PaginationProps {
 }
 
 export interface JobRequestData {
+  id: { id: string };
   title: string;
   description: string;
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED";
   category: string;
   location: string;
   assignedTo?: string;
@@ -211,14 +212,21 @@ export interface TimeReport {
     name: string;
   };
 }
+export type MealCount = {
+  id: number;
+  date: string;
+  breakfast: number;
+  lunch: number;
+  dinner: number;
+};
 
 export interface TrackingItemData {
   trackingNo: string;
   itemName: string;
   status: "PENDING" | "DELIVERED" | "IN_TRANSIT";
-  receiverName: string;
-  receiverPhone: string;
-  senderName: string;
+  receiverName: string | undefined;
+  receiverPhone: string | undefined;
+  senderName: string | undefined;
   senderPhone: string;
   location: string;
   notes: string;
@@ -229,21 +237,21 @@ export interface JobRequest {
   id: string;
   title: string;
   description: string;
-  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-  status: "OPEN";
+  priority: Priority;
+  status: JobStatus;
   category: string;
   location: string;
   assignedTo?: string;
   requestedBy: string;
-  dueDate?: Date;
-  completedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  user: {
-    name: string;
-  };
-  comments: Comment[];
+  dueDate?: string;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  comments: JobRequestComment[];
+  user: User;
+  assignedToUser?: User;
 }
+
 export interface CreateJobRequestInput {
   title: string;
   description: string;
@@ -253,4 +261,27 @@ export interface CreateJobRequestInput {
   assignedTo?: string;
   dueDate?: Date;
   requestedBy: string;
+}
+export enum Priority {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  URGENT = "URGENT",
+}
+
+export enum JobStatus {
+  OPEN = "OPEN",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+}
+export interface JobRequestComment {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: {
+    id: string;
+    name: string;
+    image?: string;
+  };
 }

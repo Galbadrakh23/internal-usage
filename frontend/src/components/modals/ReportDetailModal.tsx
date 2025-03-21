@@ -31,31 +31,29 @@ import { cn } from "@/lib/utils";
 interface ReportDetailModalProps {
   open: boolean;
   onClose: () => void;
-  report: Report | null;
+  reports: Report | null;
   updateReport: (id: number, updatedReport: Partial<Report>) => void;
 }
 
 export function ReportDetailModal({
   open,
   onClose,
-  report,
+  reports,
   updateReport,
 }: ReportDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedReport, setEditedReport] = useState<Partial<Report>>({});
 
-  // Reset edited report when the report changes or modal opens/closes
   useEffect(() => {
-    if (report) {
+    if (reports) {
       setEditedReport({
-        title: report.title,
-        status: report.status,
-        activity: report.activity,
+        title: reports.title,
+        status: reports.status,
+        activity: reports.activity,
       });
     }
-  }, [report, open]);
-
-  if (!report) return null;
+  }, [reports]);
+  if (!reports) return null;
 
   const formatDate = (date: Date | string | number) => {
     return new Date(date).toLocaleString("mn-MN", {
@@ -116,9 +114,9 @@ export function ReportDetailModal({
       setIsEditing(false);
       // Reset to original values
       setEditedReport({
-        title: report.title,
-        status: report.status,
-        activity: report.activity,
+        title: reports.title,
+        status: reports.status,
+        activity: reports.activity,
       });
     } else {
       // Start editing - initialize with current values
@@ -127,8 +125,8 @@ export function ReportDetailModal({
   };
 
   const handleSave = () => {
-    if (report && report.id) {
-      updateReport(report.id, editedReport);
+    if (reports && reports.id) {
+      updateReport(reports.id, editedReport);
       setIsEditing(false);
     }
   };
@@ -174,7 +172,7 @@ export function ReportDetailModal({
               <Textarea
                 value={(editedReport[field] as string) || ""}
                 onChange={(e) => handleChange(field, e.target.value)}
-                className="w-full resize-none"
+                className="w-full resize-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200 rounded-lg"
                 rows={5}
                 autoComplete="off"
                 spellCheck="false"
@@ -184,13 +182,17 @@ export function ReportDetailModal({
                 value={(editedReport[field] as string) || ""}
                 onValueChange={(value) => handleChange(field, value)}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200 rounded-lg">
                   <SelectValue placeholder="Ангилал сонгох" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-lg">
                   {statusOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {statusTranslations[option] || option}
+                    <SelectItem
+                      key={option}
+                      value={option}
+                      className="focus:bg-primary/10 cursor-pointer"
+                    >
+                      {statusTranslations[option.toLowerCase()] || option}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -199,7 +201,7 @@ export function ReportDetailModal({
               <Input
                 value={(editedReport[field] as string) || ""}
                 onChange={(e) => handleChange(field, e.target.value)}
-                className="w-full"
+                className="w-full focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200 rounded-lg"
                 autoComplete="off"
                 spellCheck="false"
               />
@@ -214,7 +216,7 @@ export function ReportDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden rounded-xl border shadow-lg animate-in fade-in-0 zoom-in-95 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-200">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-semibold">
             Тайлангийн дэлгэрэнгүй
@@ -244,12 +246,12 @@ export function ReportDetailModal({
                     <InfoRow
                       icon={User}
                       label="Үүсгэсэн"
-                      value={report.user?.name || ""}
+                      value={reports.user?.name || ""}
                     />
                     <InfoRow
                       icon={Clock}
                       label="Үүсгэсэн огноо"
-                      value={formatDate(report.createdAt)}
+                      value={formatDate(reports.createdAt)}
                     />
                   </div>
 
@@ -259,14 +261,14 @@ export function ReportDetailModal({
                     <InfoRow
                       icon={Archive}
                       label="Гарчиг"
-                      value={report.title}
+                      value={reports.title}
                       field="title"
                       editable={true}
                     />
                     <InfoRow
                       icon={Tag}
                       label="Ангилал"
-                      value={getStatusBadge(report.status)}
+                      value={getStatusBadge(reports.status)}
                       field="status"
                       editable={true}
                       inputType="select"
@@ -276,7 +278,7 @@ export function ReportDetailModal({
                   <InfoRow
                     icon={ClipboardIcon}
                     label="Дэлгэрэнгүй"
-                    value={report.activity}
+                    value={reports.activity}
                     field="activity"
                     editable={true}
                     inputType="textarea"
@@ -293,25 +295,32 @@ export function ReportDetailModal({
               <Button
                 variant="outline"
                 onClick={handleEditToggle}
-                className="flex-1"
+                className="flex-1 transition-colors duration-200 rounded-lg"
               >
                 <X className="mr-2 h-4 w-4" />
                 Цуцлах
               </Button>
-              <Button onClick={handleSave} className="flex-1">
+              <Button
+                onClick={handleSave}
+                className="flex-1 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 rounded-lg"
+              >
                 <Save className="mr-2 h-4 w-4" />
                 Хадгалах
               </Button>
             </div>
           ) : (
             <div className="flex w-full gap-2">
-              <Button variant="outline" onClick={onClose} className="flex-1">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="flex-1 transition-colors duration-200 rounded-lg"
+              >
                 Хаах
               </Button>
               <Button
                 variant="default"
                 onClick={handleEditToggle}
-                className="flex-1"
+                className="flex-1 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 rounded-lg"
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Засах

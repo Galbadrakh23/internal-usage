@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState, useCallback } from "react";
 import { Report } from "@/interface";
 import { apiUrl } from "@/utils/utils";
 import axios from "axios";
@@ -12,10 +12,17 @@ type ReportProviderProps = {
 type CreateReportData = Omit<Report, "id">;
 
 type ReportContext = {
-  Reports: Report[];
-  loading: boolean;
+  reports: Report[];
+  isLoading: boolean;
   error: string | null;
-  fetchAllReports: () => void;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+  fetchReports: (page?: number, limit?: number) => Promise<void>;
   deleteReport: (id: number) => void;
   updateReport: (id: number, updatedReport: Partial<Report>) => void;
   refetchReports: () => void;
@@ -23,10 +30,17 @@ type ReportContext = {
 };
 
 export const ReportContext = createContext<ReportContext>({
-  Reports: [],
-  loading: false,
+  reports: [],
+  isLoading: true,
   error: null,
-  fetchAllReports: () => {},
+  pagination: {
+    currentPage: 0,
+    totalPages: 0,
+    totalItems: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  },
+  fetchReports: async () => {},
   deleteReport: () => {},
   updateReport: () => {},
   refetchReports: () => {},
@@ -34,53 +48,73 @@ export const ReportContext = createContext<ReportContext>({
 });
 
 export const ReportProvider = ({ children }: ReportProviderProps) => {
-  const [Reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
 
-  const fetchAllReports = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchReports = useCallback(async (page = 1, limit = 10) => {
+    setIsLoading(true);
     try {
-      const res = await axios.get(`${apiUrl}/api/reports`);
-      if (res.status === 200) {
-        setReports(res.data);
+      const { data } = await axios.get(`${apiUrl}/api/reports`, {
+        params: { page, limit },
+        withCredentials: true,
+      });
+
+      if (data?.data && Array.isArray(data.data)) {
+        setReports(data.data);
+        setPagination({
+          currentPage: data.pagination.currentPage,
+          totalPages: data.pagination.totalPages,
+          totalItems: data.pagination.totalItems,
+          hasNextPage: data.pagination.hasNextPage,
+          hasPrevPage: data.pagination.hasPrevPage,
+        });
+      } else {
+        console.error("Invalid patrol data format:", data);
+        setReports([]);
       }
     } catch (error) {
-      console.error("Failed to fetch daily reports:", error);
-      setError("Failed to fetch daily reports. Please try again later.");
+      console.error("Error fetching Reports data:", error);
+      setReports([]);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, []);
 
   const deleteReport = async (id: number) => {
-    setLoading(true);
+    setIsLoading(true);
     try {
       const res = await axios.delete(`${apiUrl}/api/reports/${id}`);
       if (res.status === 200) {
-        fetchAllReports();
+        fetchReports();
       }
     } catch (error) {
       console.error("Failed to delete report:", error);
       setError("Failed to delete report. Please try again.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const updateReport = async (id: number, updatedReport: Partial<Report>) => {
-    setLoading(true);
+    setIsLoading(true);
     try {
       const res = await axios.put(`${apiUrl}/api/reports/${id}`, updatedReport);
       if (res.status === 200) {
-        fetchAllReports();
+        fetchReports();
       }
     } catch (error) {
       console.error("Failed to update report:", error);
       setError("Failed to update report. Please try again.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -125,20 +159,21 @@ export const ReportProvider = ({ children }: ReportProviderProps) => {
   };
 
   useEffect(() => {
-    fetchAllReports();
-  }, []);
+    fetchReports();
+  }, [fetchReports]);
 
   return (
     <ReportContext.Provider
       value={{
-        Reports,
-        loading,
+        reports,
+        isLoading,
         error,
-        fetchAllReports,
+        pagination,
+        fetchReports,
         createReport,
         deleteReport,
         updateReport,
-        refetchReports: fetchAllReports,
+        refetchReports: fetchReports,
       }}
     >
       {children}
