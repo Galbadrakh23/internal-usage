@@ -101,14 +101,12 @@ const UserTable = ({
       header: "Нэр",
       accessorFn: (user) => user.name,
       searchable: true,
-      sortable: true,
     },
     {
       id: "email",
       header: "И-мэйл",
       accessorFn: (user) => user.email,
       searchable: true,
-      sortable: true,
     },
     {
       id: "role",
@@ -119,14 +117,12 @@ const UserTable = ({
           {value}
         </Badge>
       ),
-      sortable: true,
     },
     {
       id: "createdAt",
       header: "Бүртгэсэн огноо",
       accessorFn: (user) =>
         new Date(user.createdAt).toLocaleDateString("en-CA"),
-      sortable: true,
     },
     {
       id: "actions",
