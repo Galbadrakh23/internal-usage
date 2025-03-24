@@ -1,7 +1,8 @@
 "use client";
+
 import { useContext, useEffect } from "react";
 import { DeliveryContext } from "@/context/DeliveryProvider";
-import { DeliveryTable } from "@/components/data-table/data-table";
+import { DeliveryTable } from "@/components/data-table/delivery/DeliveriesTable";
 import PageHeader from "@/components/layout_components/PageHeader";
 import Pagination from "@/components/features/pagination/Pagination";
 
@@ -9,7 +10,6 @@ export default function DeliveryPage() {
   const { deliveries, pagination, fetchDeliveries } =
     useContext(DeliveryContext);
 
-  // Function to handle page change
   const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage <= pagination.totalPages) {
       fetchDeliveries(newPage);

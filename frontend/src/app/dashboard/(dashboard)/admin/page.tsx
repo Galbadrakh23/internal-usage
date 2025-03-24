@@ -1,7 +1,7 @@
 "use client";
 import { useContext, useEffect } from "react";
 import { UserContext } from "@/context/UserProvider";
-import UserTable from "@/components/data-table/UserTable";
+import UserTable from "@/components/data-table/user/UserTable";
 import PageHeader from "@/components/layout_components/PageHeader";
 
 export default function UsersPage() {

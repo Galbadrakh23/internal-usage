@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useEffect, useState, useCallback } from "react";
-import { Report } from "@/interface";
+import { Report } from "@/interfaces/interface";
 import { apiUrl } from "@/utils/utils";
 import axios from "axios";
 

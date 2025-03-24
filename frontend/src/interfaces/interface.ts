@@ -1,23 +1,8 @@
-export interface IUser {
-  username: string;
-  email: string;
-  password: string;
-}
-
 export interface ILogin {
   email: string;
   password: string;
 }
 
-export interface IRegister extends IUser {
-  confirmPassword: string;
-}
-export interface UserContextType {
-  user: IUser | null;
-  setToken: (token: string) => void;
-  setUser: React.Dispatch<React.SetStateAction<IUser | null>>;
-  fetchUserData?: () => void;
-}
 export interface ReportListProps {
   dailyReports: Report[];
 }
@@ -37,6 +22,22 @@ export interface Employee {
   };
   phone: string;
 }
+export interface Company {
+  id: string;
+  name: string;
+}
+
+export interface DeliveryTableProps {
+  data: Delivery[];
+  fetchDeliveries: (page?: number, limit?: number) => Promise<void>;
+  onPageChange: (page: number) => void;
+}
+export interface MealCountTableProps {
+  mealCounts: MealCount[];
+  fetchMealCounts: (page?: number, limit?: number) => Promise<void>;
+  onPageChange: (newPage: number) => void;
+}
+
 export interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -81,6 +82,7 @@ export interface Report {
   id: number;
   title: string;
   activity: string;
+  content: string;
   status: "DAILY" | "HOURLY" | "IMPORTANT";
   userId: string;
   createdAt: Date;
@@ -192,7 +194,7 @@ export type Patrol = {
   imagePath: string;
   status: string;
   totalCheckPoint: number;
-  user: { name: string };
+  checkedBy: string;
   propertyId: { id: string };
   property: { name: string };
   createdAt: string;
@@ -212,13 +214,13 @@ export interface TimeReport {
     name: string;
   };
 }
-export type MealCount = {
-  id: number;
+export interface MealCount {
+  id: string;
   date: string;
   breakfast: number;
   lunch: number;
   dinner: number;
-};
+}
 
 export interface TrackingItemData {
   trackingNo: string;

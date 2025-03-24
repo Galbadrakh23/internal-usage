@@ -1,17 +1,16 @@
 "use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button"; // Replace with your button component
-import { JobsRequestDetailModal } from "@/components/modals/JobRequestsModal";
-import type { JobRequest } from "@/interfaces/interface";
+import { PatrolDetailsModal } from "@/components/modals/PatrolDetailModal";
+import type { Patrol } from "@/interfaces/interface";
 import { Eye } from "lucide-react";
 
-interface JobRequestsDetailsButtonProps {
-  jobRequest: JobRequest;
+interface PatrolDetailsButtonProps {
+  patrol: Patrol;
 }
 
-export function JobRequestsDetailButton({
-  jobRequest,
-}: JobRequestsDetailsButtonProps) {
+export function PatrolDetailsButton({ patrol }: PatrolDetailsButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -20,10 +19,10 @@ export function JobRequestsDetailButton({
         <Eye className="h-5 w-5 text-gray-500" />
         Харах
       </Button>
-      <JobsRequestDetailModal
+      <PatrolDetailsModal
         open={isOpen}
         onClose={() => setIsOpen(false)}
-        jobRequest={jobRequest}
+        patrols={patrol}
       />
     </>
   );

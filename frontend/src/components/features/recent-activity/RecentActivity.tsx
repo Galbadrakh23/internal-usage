@@ -19,7 +19,6 @@ type Activity = {
   title: string;
   createdAt: Date;
   updatedAt: Date;
-  user: { name: string };
   type: "report" | "delivery" | "patrol";
 };
 

@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 export const getMealsCount = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = parseInt(req.query.limit as string) || 15;
     const offset = (page - 1) * limit;
 
     const mealCounts = await prisma.mealCount.findMany({
@@ -22,6 +22,7 @@ export const getMealsCount = async (req: Request, res: Response) => {
     });
     // Get total count for pagination info
     const totalCount = await prisma.mealCount.count();
+
     res.status(200).json({
       data: mealCounts,
       pagination: {
@@ -33,7 +34,8 @@ export const getMealsCount = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ error: "Failed to fetch meal counts" });
+    console.error("Error fetching meal counts:", error);
+    return res.status(500).json({ message: "Failed to fetch meal counts" });
   }
 };
 
@@ -95,5 +97,25 @@ export const dailyMealCount = async (req: Request, res: Response) => {
     return res.json(mealCount);
   } catch (error) {
     return res.status(500).json({ error: "Failed to fetch meal count" });
+  }
+};
+
+export const updateMealCount = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const mealCountData = req.body;
+
+  if (!id) {
+    return res.status(400).json({ error: "Meal Count ID is required." });
+  }
+
+  try {
+    const updatedMealCount = await prisma.mealCount.update({
+      where: { id: parseInt(id) },
+      data: mealCountData,
+    });
+
+    res.json(updatedMealCount);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update meal count." });
   }
 };

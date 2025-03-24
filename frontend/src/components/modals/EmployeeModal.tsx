@@ -1,9 +1,9 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -21,9 +21,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Company } from "@/interfaces/interface";
+import { Loader2 } from "lucide-react";
 
-// Form validation schema
 const employeeFormSchema = z.object({
   name: z.string().min(2, { message: "Нэр 2-оос дээш тэмдэгт байх ёстой" }),
   position: z
@@ -31,33 +38,27 @@ const employeeFormSchema = z.object({
     .min(2, { message: "Албан тушаал 2-оос дээш тэмдэгт байх ёстой" }),
   phone: z
     .string()
-    .min(8, { message: "Утасны дугаар 8-аас дээш тэмдэгт байх ёстой" }),
+    .min(8, { message: "Утасны дугаар 8-аас дээш тэмдэгт байх ёстой" })
+    .regex(/^[0-9]+$/, { message: "Утасны дугаар зөвхөн тоо агуулах ёстой" }),
   companyId: z.string().min(1, { message: "Компани сонгоно уу" }),
 });
 
 type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
 
-interface Company {
-  id: string;
-  name: string;
-}
-
 interface EmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedCompanyId?: string;
-  companies: Company[];
   onSuccess: () => void;
   addEmployee: (employeeData: EmployeeFormValues) => Promise<void>;
+  companies: Company[];
 }
 
 export function EmployeeModal({
   isOpen,
   onClose,
-  selectedCompanyId,
-  companies,
   onSuccess,
   addEmployee,
+  companies,
 }: EmployeeModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -67,39 +68,32 @@ export function EmployeeModal({
       name: "",
       position: "",
       phone: "",
-      companyId: selectedCompanyId || "",
+      companyId: "",
     },
   });
 
   useEffect(() => {
-    if (selectedCompanyId) {
-      console.log("Selected company ID:", selectedCompanyId);
-      form.setValue("companyId", selectedCompanyId);
+    if (isOpen) {
+      form.reset();
     }
-  }, [selectedCompanyId, form]);
+  }, [isOpen, form]);
 
   async function onSubmit(data: EmployeeFormValues) {
-    console.log("Submitting employee data:", data);
     setIsSubmitting(true);
     try {
       await addEmployee(data);
-      toast({
-        title: "Амжилттай",
-        description: "Шинэ ажилтан амжилттай нэмэгдлээ",
-      });
       form.reset();
+      toast.success("Ажилтан амжилттай нэмэгдлээ!");
       onSuccess();
+      onClose();
     } catch (error) {
       console.error("Error creating employee:", error);
-      toast({
-        title: "Алдаа",
-        description: "Ажилтан нэмэх үед алдаа гарлаа",
-        variant: "destructive",
-      });
+      toast.error("Алдаа гарлаа. Дахин оролдоно уу.");
     } finally {
       setIsSubmitting(false);
     }
   }
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -144,7 +138,14 @@ export function EmployeeModal({
                 <FormItem>
                   <FormLabel>Утас</FormLabel>
                   <FormControl>
-                    <Input placeholder="Утасны дугаар" {...field} />
+                    <Input
+                      placeholder="Утасны дугаар"
+                      {...field}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, "");
+                        field.onChange(value);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,21 +158,23 @@ export function EmployeeModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Компани</FormLabel>
-                  <FormControl>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      {...field}
-                    >
-                      <option value="" disabled>
-                        Компани сонгох
-                      </option>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Компани сонгох" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
                       {companies.map((company) => (
-                        <option key={company.id} value={company.id}>
+                        <SelectItem key={company.id} value={company.id}>
                           {company.name}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                  </FormControl>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -182,7 +185,14 @@ export function EmployeeModal({
                 Цуцлах
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Хадгалж байна..." : "Хадгалах"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Хадгалж байна...
+                  </>
+                ) : (
+                  "Хадгалах"
+                )}
               </Button>
             </DialogFooter>
           </form>

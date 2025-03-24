@@ -1,4 +1,5 @@
 "use client";
+import { EmployeeProvider } from "@/context/EmployeeProvider";
 import { PatrolProvider } from "@/context/PatrolProvider";
 
 export default function PatrolLayout({
@@ -6,5 +7,9 @@ export default function PatrolLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <PatrolProvider>{children}</PatrolProvider>;
+  return (
+    <PatrolProvider>
+      <EmployeeProvider>{children}</EmployeeProvider>
+    </PatrolProvider>
+  );
 }

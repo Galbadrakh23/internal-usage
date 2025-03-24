@@ -14,7 +14,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -163,7 +162,6 @@ export function MealCountModal({ isOpen, onClose }: MealCountModalProps) {
                   <FormControl>
                     <Input type="number" min="0" {...field} />
                   </FormControl>
-                  <FormDescription>Өглөөний цайны тоо</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -177,7 +175,6 @@ export function MealCountModal({ isOpen, onClose }: MealCountModalProps) {
                   <FormControl>
                     <Input type="number" min="0" {...field} />
                   </FormControl>
-                  <FormDescription>Өдрийн хоолны тоо</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -191,7 +188,6 @@ export function MealCountModal({ isOpen, onClose }: MealCountModalProps) {
                   <FormControl>
                     <Input type="number" min="0" {...field} />
                   </FormControl>
-                  <FormDescription>Оройн хоолны тоо</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

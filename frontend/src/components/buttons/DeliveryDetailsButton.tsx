@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button"; // Replace with your button component
 import { DeliveryDetailsModal } from "@/components/modals/DeliveryDetailModal";
-import type { TrackingItem } from "@/interface";
+import type { TrackingItem } from "@/interfaces/interface";
 import { Eye } from "lucide-react";
 
 interface DeliveryDetailsButtonProps {

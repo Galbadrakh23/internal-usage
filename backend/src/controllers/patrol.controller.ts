@@ -21,8 +21,8 @@ export const getAllPatrols = async (req: Request, res: Response) => {
         status: true,
         totalCheckPoint: true,
         createdAt: true,
-        user: { select: { name: true } },
         property: { select: { name: true } },
+        checkedBy: true,
       },
     });
 
@@ -56,7 +56,6 @@ export const getPatrolById = async (req: Request, res: Response) => {
         status: true,
         totalCheckPoint: true,
         createdAt: true,
-        user: { select: { name: true } },
         property: { select: { name: true } },
       },
     });
@@ -84,17 +83,18 @@ export const createPatrol = async (req: Request, res: Response) => {
     if (
       !checkPoint ||
       !status ||
-      !checkedBy ||
       !propertyId ||
       totalCheckPoint === undefined
     ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
-    const userExists = await prisma.user.findUnique({
-      where: { id: checkedBy },
+
+    // Check if the propertyId exists
+    const propertyExists = await prisma.property.findUnique({
+      where: { id: propertyId },
     });
-    if (!userExists) {
-      return res.status(400).json({ message: "invalid checkedBy ID" });
+    if (!propertyExists) {
+      return res.status(400).json({ message: "Invalid propertyId" });
     }
 
     const newPatrolCheck = await prisma.patrolCheck.create({
@@ -112,7 +112,6 @@ export const createPatrol = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error creating patrol check:", error);
 
-    // Prisma error handling
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       return res
         .status(400)

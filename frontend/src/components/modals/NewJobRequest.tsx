@@ -30,7 +30,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -144,13 +143,10 @@ export function CreateJobRequestModal({
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] p-4 rounded-xl border shadow-lg animate-in fade-in-0 zoom-in-95 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-200">
-        <DialogHeader className="mb-2">
-          <DialogTitle className="text-lg font-bold">
+        <DialogHeader className="">
+          <DialogTitle className="text-lg font-semibold">
             Шинэ ажлын хүсэлт үүсгэх
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground mt-1">
-            Шинэ ажлын хүсэлт үүсгэхийн тулд доорх хүснэгтийг бөглөнө үү.
-          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -163,11 +159,10 @@ export function CreateJobRequestModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="font-medium text-sm">
-                        Ажлын нэр
+                        Ажлын гарчиг
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Хийгдсэн ажил"
                           {...field}
                           className="focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200 rounded-lg"
                         />
@@ -187,11 +182,27 @@ export function CreateJobRequestModal({
                           Хийгдэх ажлын талаарх
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Ангилал оруулах"
-                            {...field}
-                            className="focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200 rounded-lg"
-                          />
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <SelectTrigger className="focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200 rounded-lg">
+                              <SelectValue placeholder="Ангилал сонгох" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[
+                                "Цахилгаан",
+                                "Сантехник",
+                                "Аж ахуй",
+                                "Агааржуулалт",
+                                "Бусад",
+                              ].map((category) => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </FormControl>
                         <FormMessage className="text-red-500 text-xs mt-1" />
                       </FormItem>

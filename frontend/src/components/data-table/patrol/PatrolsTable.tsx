@@ -4,8 +4,9 @@ import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@radix-ui/react-icons";
 import CreatePatrolModal from "@/components/modals/NewPatrolModal";
-import { PatrolDetailsModal } from "@/components/modals/PatrolDetailModal";
-import { Patrol } from "@/interface";
+import { PatrolDetailsButton } from "@/components/buttons/PatrolDetailsButton";
+import PatrolStatusUpdater from "@/components/data-table/patrol/Patrol-Status";
+import { Patrol } from "@/interfaces/interface";
 import {
   DynamicTable,
   TableColumn,
@@ -64,8 +65,6 @@ type TableProps = {
 
 const PatrolTable: React.FC<TableProps> = ({ patrols, isLoading }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPatrol, setSelectedPatrol] = useState<Patrol | null>(null);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<string>("");
 
   const getCheckpointTotal = (propertyName: string | undefined) => {
@@ -116,11 +115,6 @@ const PatrolTable: React.FC<TableProps> = ({ patrols, isLoading }) => {
     return `${checkpoints || 0} / ${total}`;
   };
 
-  const handleViewDetails = (patrol: Patrol) => {
-    setSelectedPatrol(patrol);
-    setIsDetailsModalOpen(true);
-  };
-
   const columns: TableColumn<Patrol>[] = [
     {
       id: "createdAt",
@@ -138,7 +132,7 @@ const PatrolTable: React.FC<TableProps> = ({ patrols, isLoading }) => {
     {
       id: "user",
       header: "Ажилтан",
-      accessorFn: (patrol) => patrol.user?.name || "N/A",
+      accessorFn: (patrol) => patrol.checkedBy || "N/A",
       searchable: true,
     },
     {
@@ -155,22 +149,16 @@ const PatrolTable: React.FC<TableProps> = ({ patrols, isLoading }) => {
       searchable: true,
     },
     {
+      id: "detail",
+      header: "Дэлгэрэнгүй",
+      accessorFn: (patrol) => patrol,
+      cell: (patrol: Patrol) => <PatrolDetailsButton patrol={patrol} />,
+    },
+    {
       id: "actions",
-      header: "Бусад",
-      accessorFn: () => "",
-      cell: (_, patrol) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleViewDetails(patrol);
-          }}
-          className="text-xs"
-        >
-          Дэлгэрэнгүй
-        </Button>
-      ),
+      header: "Төлөв өөрчлөх",
+      accessorFn: (patrol) => patrol.id,
+      cell: (patrol: Patrol) => <PatrolStatusUpdater patrol={patrol} />,
     },
   ];
 
@@ -207,7 +195,6 @@ const PatrolTable: React.FC<TableProps> = ({ patrols, isLoading }) => {
         columns={columns}
         idField="id"
         isLoading={isLoading}
-        onRowClick={handleViewDetails}
         selectProperty={selectProperty}
         pageSize={10}
         searchPlaceholder="Хайх..."
@@ -221,14 +208,6 @@ const PatrolTable: React.FC<TableProps> = ({ patrols, isLoading }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
-
-      {selectedPatrol && (
-        <PatrolDetailsModal
-          open={isDetailsModalOpen}
-          onClose={() => setIsDetailsModalOpen(false)}
-          patrols={selectedPatrol}
-        />
-      )}
     </div>
   );
 };

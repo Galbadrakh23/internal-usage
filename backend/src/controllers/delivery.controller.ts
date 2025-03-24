@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 
 export const getAllDeliveries = async (req: Request, res: Response) => {
   try {
-    // Get pagination parameters from query (default: page 1, limit 10)
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 15;
     const offset = (page - 1) * limit;
@@ -42,7 +41,7 @@ export const getAllDeliveries = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error fetching patrols:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: "Failed to fetch deliveries" });
   }
 };
 

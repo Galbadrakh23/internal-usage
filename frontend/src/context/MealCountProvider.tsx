@@ -3,9 +3,8 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { apiUrl } from "@/utils/utils";
-import { MealCount } from "@/interface";
+import { MealCount } from "@/interfaces/interface";
 
-// This defines the shape of the context that will be provided to components
 type MealCountContextType = {
   mealCounts: MealCount[];
   isLoading: boolean;
@@ -46,13 +45,11 @@ export const MealCountContext = createContext<MealCountContextType>({
   deleteMealCount: async () => {},
 });
 
-// The provider component that will wrap parts of your application
 export const MealCountProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  // State management for meal counts and loading/error states
   const [mealCounts, setMealCounts] = useState<MealCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +61,6 @@ export const MealCountProvider = ({
     hasPrevPage: false,
   });
 
-  // Function to fetch meal counts with pagination
   const fetchMealCounts = useCallback(async (page = 1, limit = 10) => {
     setIsLoading(true);
     setError(null);
@@ -78,7 +74,6 @@ export const MealCountProvider = ({
         setMealCounts(data.data);
         setPagination(data.pagination);
       }
-      console.log("data", data);
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Failed to fetch meal counts"
@@ -89,13 +84,12 @@ export const MealCountProvider = ({
     }
   }, []);
 
-  // Function to create a new meal count
   const createMealCount = useCallback(
     async (mealCountData: MealCount): Promise<MealCount> => {
       setError(null);
       try {
         const { data } = await axios.post(
-          `${apiUrl}/api/mealcounts`,
+          `${apiUrl}/api/meal-counts`,
           mealCountData,
           {
             withCredentials: true,
@@ -171,12 +165,10 @@ export const MealCountProvider = ({
     [fetchMealCounts]
   );
 
-  // Fetch meal counts when the component mounts
   useEffect(() => {
     fetchMealCounts();
   }, [fetchMealCounts]);
 
-  // Provide the context value to children components
   return (
     <MealCountContext.Provider
       value={{

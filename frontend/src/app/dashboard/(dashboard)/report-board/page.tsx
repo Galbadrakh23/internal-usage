@@ -1,7 +1,7 @@
 "use client";
 import { useContext, useEffect } from "react";
 import { ReportContext } from "@/context/ReportProvider";
-import TimeReport from "@/components/features/time-report/TimeReport";
+import ReportsTable from "@/components/data-table/reports/ReportsTable";
 import PageHeader from "@/components/layout_components/PageHeader";
 import Pagination from "@/components/features/pagination/Pagination";
 
@@ -23,7 +23,7 @@ export default function ReportPage() {
     <main className="flex-1 space-y-2">
       <div className="flex flex-col gap-2">
         <PageHeader title="Нийт тайлан" />
-        <TimeReport Reports={reports} updateReport={updateReport} />
+        <ReportsTable Reports={reports} updateReport={updateReport} />
         <div className="flex items-center justify-center">
           {pagination.totalPages > 0 && (
             <Pagination

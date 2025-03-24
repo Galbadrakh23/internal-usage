@@ -5,10 +5,11 @@ import {
   DynamicTable,
   TableColumn,
 } from "@/components/data-table/DynamicTable";
-import { Report } from "@/interface";
+import { Report } from "@/interfaces/interface";
 import { Badge } from "@/components/ui/badge";
 import { ReportModal } from "@/components/modals/NewReportModal";
 import { ReportsDetailsButton } from "@/components/buttons/ReportsDetailsButton";
+import { EditReportsButton } from "@/components/buttons/EditReportsButton";
 
 interface ReportListProps {
   Reports: Report[];
@@ -37,7 +38,7 @@ const getStatusBadge = (status: string) => {
   }
 };
 
-export default function ReportList({
+export default function ReportsTable({
   Reports,
   isLoading = false,
 }: ReportListProps) {
@@ -75,10 +76,16 @@ export default function ReportList({
       searchable: true,
     },
     {
-      id: "actions",
+      id: "detail",
       header: "Дэлгэрэнгүй",
       accessorFn: (row) => row,
       cell: (row: Report) => <ReportsDetailsButton reports={row} />,
+    },
+    {
+      id: "actions",
+      header: "Төлөв өөрчлөх",
+      accessorFn: (row) => row,
+      cell: (row: Report) => <EditReportsButton reports={row} />,
     },
   ];
 

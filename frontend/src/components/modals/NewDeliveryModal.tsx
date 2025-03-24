@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -36,7 +35,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { DeliveryContext } from "@/context/DeliveryProvider";
 import { UserContext } from "@/context/UserProvider";
-import { TrackingItemData } from "@/interface";
+import { TrackingItemData } from "@/interfaces/interface";
 
 const deliveryFormSchema = z.object({
   trackingNo: z.string().min(1, "Бүртгэлийн дугаар оруулна уу"),
@@ -51,10 +50,7 @@ const deliveryFormSchema = z.object({
     .regex(/^[0-9]+$/, "Зөвхөн тоо оруулна уу")
     .optional()
     .or(z.literal("")),
-  receiverPhone: z
-    .string()
-    .regex(/^[0-9]+$/, "Зөвхөн тоо оруулна уу")
-    .optional(),
+  receiverPhone: z.string().optional(),
   location: z.string().min(1, "Байршил оруулна уу"),
   notes: z.string().optional(),
   weight: z
@@ -67,7 +63,6 @@ const deliveryFormSchema = z.object({
 
 type DeliveryFormValues = z.infer<typeof deliveryFormSchema>;
 
-// Status options with visual indicators
 const statusOptions = [
   { value: "PENDING", label: "Үлдээсэн", color: "bg-amber-500" },
   { value: "DELIVERED", label: "Хүргэгдсэн", color: "bg-green-500" },
@@ -112,7 +107,7 @@ const NewDeliveryModal = () => {
       if (newOpen) {
         form.reset({
           trackingNo: generateTrackingNumber(),
-          itemName: "Илгээмж", // Set default value
+          itemName: "",
           status: "PENDING",
           receiverName: "",
           receiverPhone: "",
@@ -155,7 +150,6 @@ const NewDeliveryModal = () => {
         toast.success("Илгээмж амжилттай бүртгэгдлээ");
         setOpen(false);
       } catch (err) {
-        // Enhanced error handling
         if (err && typeof err === "object" && "response" in err) {
           const axiosError = err as {
             response?: { data?: { message?: string } };
@@ -184,21 +178,18 @@ const NewDeliveryModal = () => {
           variant="outline"
           className="gap-2 hover:bg-primary/10 transition-all duration-200 rounded-lg"
         >
-          <PlusIcon className="mr-1 h-4 w-4" />
+          <PlusIcon className="h-4 w-4" />
           <span>Илгээмж бүртгэх</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[450px] p-4 rounded-xl border shadow-lg animate-in fade-in-0 zoom-in-95 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-200">
-        <DialogHeader className="mb-2">
-          <DialogTitle className="text-lg font-bold">
+        <DialogHeader className="flex items-start justify-between">
+          <DialogTitle className="text-lg font-semibold text-primary">
             Илгээмж бүртгэл хийх
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground mt-1 text-sm">
-            Шинэ илгээмжийн бүртгэл үүсгэхийн тулд доорх мэдээллийг оруулна уу.
-          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
             {/* Hidden Fields - These will still be submitted but not shown in the UI */}
             <input type="hidden" {...form.register("trackingNo")} />
             <input type="hidden" {...form.register("weight")} />

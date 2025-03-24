@@ -18,8 +18,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import type { TrackingItem } from "@/interface";
+import type { TrackingItem } from "@/interfaces/interface";
 import { useMemo } from "react";
+import { format } from "date-fns";
 
 interface DeliveryDetailsModalProps {
   open: boolean;
@@ -56,7 +57,7 @@ export function DeliveryDetailsModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] md:max-w-[500px] p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold">
+          <DialogTitle className="text-2xl font-normal">
             Дэлгэрэнгүй мэдээлэл
           </DialogTitle>
         </DialogHeader>
@@ -113,14 +114,14 @@ export function DeliveryDetailsModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InfoRow
               icon={IdCardIcon}
-              label="Үүсгэсэн ажилтан"
-              value={delivery.user?.name || "N/A"}
+              label="Бүртгэсэн ажилтан"
+              value={delivery.user?.name}
               className="md:col-span-1"
             />
             <InfoRow
               icon={CalendarIcon}
               label="Бүртгэсэн огноо"
-              value={formatDate(new Date(delivery.createdAt))}
+              value={format(new Date(delivery.createdAt), "M/d/yyyy, hh:mm a")}
               className="md:col-span-1 md:justify-self-end"
             />
           </div>
@@ -154,13 +155,4 @@ function InfoRow({
       </div>
     </div>
   );
-}
-
-function formatDate(date: Date): string {
-  try {
-    return date.toLocaleString("mn-MN");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
-    return "Invalid date";
-  }
 }

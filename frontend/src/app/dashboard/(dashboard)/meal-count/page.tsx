@@ -1,11 +1,11 @@
 "use client";
 import { useContext, useEffect } from "react";
-import PageHeader from "@/components/layout_components/PageHeader";
-import MealCountTable from "@/components/meals/MealsTable";
 import { MealCountContext } from "@/context/MealCountProvider";
+import PageHeader from "@/components/layout_components/PageHeader";
+import MealCountTable from "@/components/data-table/meals/MealsTable";
 import Pagination from "@/components/features/pagination/Pagination";
 
-export default function MealCountPage() {
+export default function MealCountsPage() {
   const { mealCounts, fetchMealCounts, pagination } =
     useContext(MealCountContext);
 
@@ -22,13 +22,13 @@ export default function MealCountPage() {
   return (
     <main className="flex-1 space-y-2">
       <div className="flex flex-col gap-2">
-        <PageHeader title="Хоолны талон" />
-        <MealCountTable
-          mealCounts={mealCounts}
-          onPageChange={handlePageChange}
-          fetchMealCounts={fetchMealCounts}
-        />
+        <PageHeader title="Хоолны тоо" />
       </div>
+      <MealCountTable
+        mealCounts={mealCounts}
+        onPageChange={handlePageChange}
+        fetchMealCounts={fetchMealCounts}
+      />
       <div className="flex items-center justify-center">
         {pagination.totalPages > 0 && (
           <Pagination

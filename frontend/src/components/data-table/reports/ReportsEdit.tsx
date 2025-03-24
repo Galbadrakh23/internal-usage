@@ -2,16 +2,15 @@
 
 import type React from "react";
 
-import { useState, useContext, useCallback, memo } from "react";
+import { useState, useContext, useCallback, memo, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, PencilIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import * as z from "zod";
 import { toast } from "sonner";
 import { UserContext } from "@/context/UserProvider";
 import { Button } from "@/components/ui/button";
-import { PlusIcon } from "@radix-ui/react-icons";
 
 import {
   Dialog,
@@ -47,7 +46,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { ReportContext } from "@/context/ReportProvider";
-import type { CreateReportData } from "@/interfaces/interface";
+import type { Report } from "@/interfaces/interface";
 
 const reportFormSchema = z.object({
   title: z.string().min(1, "Гарчиг оруулна уу"),
@@ -81,27 +80,49 @@ const FormFieldMemo = memo(
 );
 FormFieldMemo.displayName = "FormFieldMemo";
 
-export function ReportModal() {
-  const [open, setOpen] = useState(false);
+interface EditReportModalProps {
+  report: Report;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+}
+
+export function EditReportModal({
+  report,
+  onOpenChange,
+  open,
+}: EditReportModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const reportContext = useContext(ReportContext);
   if (!reportContext) {
-    throw new Error("ReportModal must be used within a ReportProvider");
+    throw new Error("EditReportModal must be used within a ReportProvider");
   }
-  const { createReport } = reportContext;
+  const { updateReport } = reportContext;
   const userContext = useContext(UserContext);
   const user = userContext?.user;
 
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportFormSchema),
     defaultValues: {
-      title: "",
-      activity: "",
-      content: "",
-      status: "DAILY",
-      date: new Date(),
+      title: report.title || "",
+      activity: report.activity || "",
+      content: report.content || "",
+      status: report.status || "DAILY",
+      date: report.date ? new Date(report.date) : new Date(),
     },
   });
+
+  // Reset form when report prop changes
+  useEffect(() => {
+    if (report && open) {
+      form.reset({
+        title: report.title || "",
+        activity: report.activity || "",
+        content: report.content || "",
+        status: report.status || "DAILY",
+        date: report.date ? new Date(report.date) : new Date(),
+      });
+    }
+  }, [report, form, open]);
 
   // Memoized submit handler to prevent unnecessary re-renders
   const handleSubmit = useCallback(
@@ -113,29 +134,15 @@ export function ReportModal() {
 
       setIsSubmitting(true);
       try {
-        const reportData: CreateReportData = {
+        const reportData: Partial<Report> = {
           ...values,
           userId: user?.userId || "",
-          comments: "",
-          createdAt: new Date(),
           updatedAt: new Date(),
-          user: {
-            name: user?.name || "",
-          },
         };
 
-        await createReport(reportData);
-        toast.success("Тайлан бүртгэл амжилттай үүслээ");
-        setOpen(false);
-
-        // Reset form after successful submission
-        form.reset({
-          title: "",
-          activity: "",
-          content: "",
-          status: "DAILY",
-          date: new Date(),
-        });
+        await updateReport(report.id, reportData);
+        toast.success("Тайлан амжилттай шинэчлэгдлээ");
+        onOpenChange(false);
       } catch (err: unknown) {
         if (err && typeof err === "object" && "isAxiosError" in err) {
           const axiosError = err as {
@@ -144,57 +151,36 @@ export function ReportModal() {
           };
           const errorMessage =
             axiosError.response?.data?.message || axiosError.message;
-          console.error("Failed to create report:", axiosError.response?.data);
-          toast.error(`Тайлан үүсгэхэд алдаа гарлаа: ${errorMessage}`);
+          console.error("Failed to update report:", axiosError.response?.data);
+          toast.error(`Тайлан шинэчлэхэд алдаа гарлаа: ${errorMessage}`);
         } else {
-          console.error("Failed to create report:", err);
-          toast.error("Тайлан үүсгэхэд алдаа гарлаа");
+          console.error("Failed to update report:", err);
+          toast.error("Тайлан шинэчлэхэд алдаа гарлаа");
         }
       } finally {
         setIsSubmitting(false);
       }
     },
-    [user, createReport, form]
-  );
-
-  // Handle dialog open/close with optimized form reset
-  const handleOpenChange = useCallback(
-    (newOpen: boolean) => {
-      if (!newOpen && !isSubmitting) {
-        // Only reset if closing and not in the middle of submission
-        setTimeout(() => {
-          form.reset({
-            title: "",
-            activity: "",
-            content: "",
-            status: "DAILY",
-            date: new Date(),
-          });
-        }, 300); // Delay reset until after animation completes
-      }
-      setOpen(newOpen);
-    },
-    [form, isSubmitting]
+    [user, updateReport, report.id, onOpenChange]
   );
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="gap-2 hover:bg-primary/10 transition-all duration-200 rounded-lg"
+          size="sm"
+          className="gap-1 hover:bg-primary/10 transition-all duration-200 rounded-lg"
         >
-          <PlusIcon className="h-4 w-4" />
-          <span>Шинэ тайлан</span>
+          <PencilIcon className="h-3.5 w-3.5" />
+          <span>Засах</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[450px] p-6 rounded-xl border shadow-lg animate-in fade-in-0 zoom-in-95 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-200">
         <DialogHeader className="mb-5 relative">
-          <DialogTitle className="text-xl font-bold">
-            Шинэ тайлан оруулах
-          </DialogTitle>
+          <DialogTitle className="text-xl font-bold">Тайлан засах</DialogTitle>
           <DialogDescription className="text-muted-foreground mt-1">
-            Тайлангийн мэдээллийг бүртгэх
+            Тайлангийн мэдээллийг шинэчлэх
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -341,7 +327,7 @@ export function ReportModal() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => onOpenChange(false)}
                 className="w-full sm:w-auto transition-colors duration-200 rounded-lg"
               >
                 Цуцлах
@@ -357,7 +343,7 @@ export function ReportModal() {
                     Түр хүлээнэ үү...
                   </>
                 ) : (
-                  "Тайлан үүсгэх"
+                  "Тайлан шинэчлэх"
                 )}
               </Button>
             </DialogFooter>

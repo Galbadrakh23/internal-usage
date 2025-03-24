@@ -3,7 +3,7 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { apiUrl } from "@/utils/utils";
-import { JobRequest, JobRequestData } from "@/interface";
+import { JobRequest, JobRequestData } from "@/interfaces/interface";
 
 interface CreateJobRequestPayload {
   title: string;
@@ -116,7 +116,7 @@ export const JobRequestProvider = ({
         headers: { "Content-Type": "application/json" },
       });
 
-      await fetchJobRequests(); // ✅ Ensure we have the latest job requests
+      await fetchJobRequests();
       setSuccessMessage("Job request created successfully");
     } catch (error) {
       const errorMessage =
@@ -138,9 +138,7 @@ export const JobRequestProvider = ({
       id: string | { id: string },
       jobRequestData: Partial<JobRequestData>
     ) => {
-      // Extract id if it's an object
       const jobId = typeof id === "string" ? id : id.id;
-
       if (!jobId) {
         console.error("Error: JobRequest ID is undefined or null.");
         return;
@@ -186,7 +184,7 @@ export const JobRequestProvider = ({
 
   useEffect(() => {
     fetchJobRequests();
-  }, [fetchJobRequests]); // ✅ Only runs once when component mounts
+  }, [fetchJobRequests]);
 
   return (
     <JobRequestContext.Provider

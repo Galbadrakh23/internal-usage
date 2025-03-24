@@ -1,7 +1,7 @@
 "use client";
 import { useContext, useEffect } from "react";
 import PageHeader from "@/components/layout_components/PageHeader";
-import PatrolTable from "@/components/patrol/PatrolTable";
+import PatrolTable from "@/components/data-table/patrol/PatrolsTable";
 import { PatrolContext } from "@/context/PatrolProvider";
 import Pagination from "@/components/features/pagination/Pagination";
 

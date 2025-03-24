@@ -20,6 +20,7 @@ export const getAllJobRequests = async (req: Request, res: Response) => {
         category: true,
         location: true,
         assignedTo: true,
+        requestedBy: true,
         dueDate: true,
         completedAt: true,
         createdAt: true,

@@ -1,6 +1,6 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { PaginationProps } from "@/interface";
+import { PaginationProps } from "@/interfaces/interface";
 import { Button } from "@/components/ui/button";
 
 const Pagination: React.FC<PaginationProps> = ({

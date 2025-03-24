@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button"; // Replace with your button component
 import { ReportDetailModal } from "@/components/modals/ReportDetailModal";
-import type { Report } from "@/interface";
+import type { Report as ReportInterface } from "@/interfaces/interface";
 import { Eye } from "lucide-react";
 
 interface ReportsDetailsButtonProps {
-  reports: Report;
+  reports: ReportInterface;
 }
 
 export function ReportsDetailsButton({ reports }: ReportsDetailsButtonProps) {
@@ -22,8 +22,7 @@ export function ReportsDetailsButton({ reports }: ReportsDetailsButtonProps) {
       <ReportDetailModal
         open={isOpen}
         onClose={() => setIsOpen(false)}
-        reports={reports}
-        updateReport={() => {}}
+        report={{ ...reports, id: reports.id.toString() }}
       />
     </>
   );

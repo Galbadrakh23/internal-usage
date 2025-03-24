@@ -8,12 +8,12 @@ import {
   DynamicTable,
   TableColumn,
 } from "@/components/data-table/DynamicTable";
-import type { User } from "@/interface";
-import NewUserModal from "../modals/NewUserModal";
+import type { User } from "@/interfaces/interface";
+import NewUserModal from "@/components/modals/NewUserModal";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import DeleteUserAlert from "@/components/alerts/delete-user-alert";
-import EditUserModal from "../modals/EditUserModal";
+import EditUserModal from "@/components/modals/EditUserModal";
 
 interface UserTableProps {
   users: User[];

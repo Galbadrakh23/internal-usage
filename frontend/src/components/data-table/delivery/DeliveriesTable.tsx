@@ -1,24 +1,14 @@
 "use client";
-import { useState } from "react";
 import {
   DynamicTable,
   TableColumn,
 } from "@/components/data-table/DynamicTable";
-import { Delivery } from "@/interface";
+import { Delivery, DeliveryTableProps } from "@/interfaces/interface";
 import NewDeliveryModal from "@/components/modals/NewDeliveryModal";
-import DeliveryStatusUpdater from "@/components/data-table/Delivery-Status";
-import { DeliveryDetailsModal } from "@/components/modals/DeliveryDetailModal";
+import DeliveryStatusUpdater from "@/components/data-table/delivery/Delivery-Status";
 import { DeliveryDetailsButton } from "@/components/buttons/DeliveryDetailsButton";
 
-interface DeliveryTableProps {
-  data: Delivery[];
-  fetchDeliveries: (page?: number, limit?: number) => Promise<void>;
-  onPageChange: (page: number) => void;
-}
-
 export function DeliveryTable({ data }: DeliveryTableProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDelivery] = useState<Delivery | null>(null);
   // Status translations
   const statusTranslations = {
     DELIVERED: "Хүргэгдсэн",
@@ -73,7 +63,7 @@ export function DeliveryTable({ data }: DeliveryTableProps) {
       searchable: true,
     },
     {
-      id: "Detail",
+      id: "detail",
       header: "Дэлгэрэнгүй",
       accessorFn: (row) => row,
       cell: (row: Delivery) => <DeliveryDetailsButton delivery={row} />,
@@ -95,13 +85,6 @@ export function DeliveryTable({ data }: DeliveryTableProps) {
         actionComponents={<NewDeliveryModal />}
         pageSize={20}
       />
-      {selectedDelivery && (
-        <DeliveryDetailsModal
-          open={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          delivery={selectedDelivery}
-        />
-      )}
     </>
   );
 }

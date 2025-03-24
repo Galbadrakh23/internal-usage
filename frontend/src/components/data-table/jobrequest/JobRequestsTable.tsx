@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useMemo } from "react";
-import type { JobRequest } from "@/interface";
+import type { JobRequest } from "@/interfaces/interface";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -16,7 +16,7 @@ import {
 import { CreateJobRequestModal } from "@/components/modals/NewJobRequest";
 import { JobsRequestDetailModal } from "@/components/modals/JobRequestsModal";
 import { JobRequestsDetailButton } from "@/components/buttons/JobsRequestDetailButton";
-import JobRequestStatusUpdater from "../data-table/JobRequestStatus";
+import JobRequestStatusUpdater from "@/components/data-table/jobrequest/JobRequestStatus";
 
 const STATUS_CONFIG = {
   OPEN: {

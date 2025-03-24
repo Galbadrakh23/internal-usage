@@ -1,7 +1,7 @@
 "use client";
 import { useContext, useEffect } from "react";
 import { JobRequestContext } from "@/context/JobRequestProvider";
-import JobRequestTable from "@/components/job-request/job-request";
+import JobRequestTable from "@/components/data-table/jobrequest/JobRequestsTable";
 import PageHeader from "@/components/layout_components/PageHeader";
 import Pagination from "@/components/features/pagination/Pagination";
 

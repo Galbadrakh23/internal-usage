@@ -3,7 +3,7 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { apiUrl } from "@/utils/utils";
-import { Patrol } from "@/interface";
+import { Patrol } from "@/interfaces/interface";
 
 type CreatePatrolData = {
   notes: string;
@@ -27,6 +27,9 @@ type PatrolContextType = {
   fetchPatrols: (page?: number, limit?: number) => Promise<void>;
   createPatrol: (data: CreatePatrolData) => Promise<void>;
   updatePatrolStatus: (patrolId: string, status: string) => Promise<void>;
+  deletePatrol: (patrolId: string) => Promise<void>;
+  setAutoRefresh: (enabled: boolean) => void;
+  setRefreshInterval: (intervalSeconds: number) => void;
 };
 
 export const PatrolContext = createContext<PatrolContextType>({
@@ -35,6 +38,7 @@ export const PatrolContext = createContext<PatrolContextType>({
   fetchPatrols: async () => {},
   createPatrol: async () => {},
   updatePatrolStatus: async () => {},
+  deletePatrol: async () => {},
   pagination: {
     currentPage: 0,
     totalPages: 0,
@@ -42,6 +46,8 @@ export const PatrolContext = createContext<PatrolContextType>({
     hasNextPage: false,
     hasPrevPage: false,
   },
+  setAutoRefresh: () => {},
+  setRefreshInterval: () => {},
 });
 
 export const PatrolProvider = ({ children }: { children: React.ReactNode }) => {
@@ -54,6 +60,10 @@ export const PatrolProvider = ({ children }: { children: React.ReactNode }) => {
     hasNextPage: false,
     hasPrevPage: false,
   });
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(30); // seconds
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const fetchPatrols = useCallback(async (page = 1, limit = 10) => {
     setIsLoading(true);
@@ -72,6 +82,8 @@ export const PatrolProvider = ({ children }: { children: React.ReactNode }) => {
           hasNextPage: data.pagination.hasNextPage,
           hasPrevPage: data.pagination.hasPrevPage,
         });
+        setCurrentPage(page);
+        setItemsPerPage(limit);
       } else {
         console.error("Invalid patrol data format:", data);
         setPatrols([]);
@@ -84,15 +96,52 @@ export const PatrolProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+  // Check for updates without changing the loading state
+  const checkForUpdates = useCallback(async () => {
+    if (!autoRefresh) return;
+
+    try {
+      const { data } = await axios.get(`${apiUrl}/api/patrols`, {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          // Optional: Add a timestamp parameter to avoid caching
+          _t: Date.now(),
+        },
+        withCredentials: true,
+      });
+
+      if (data?.data && Array.isArray(data.data)) {
+        // Check if data has changed by comparing with current patrols
+        const hasChanged =
+          JSON.stringify(data.data) !== JSON.stringify(patrols);
+
+        if (hasChanged) {
+          setPatrols(data.data);
+          setPagination({
+            currentPage: data.pagination.currentPage,
+            totalPages: data.pagination.totalPages,
+            totalItems: data.pagination.totalItems,
+            hasNextPage: data.pagination.hasNextPage,
+            hasPrevPage: data.pagination.hasPrevPage,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error checking for patrol updates:", error);
+    }
+  }, [autoRefresh, currentPage, itemsPerPage, patrols]);
+
   const createPatrol = async (patrolData: CreatePatrolData) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${apiUrl}/api/patrols`, patrolData, {
+      await axios.post(`${apiUrl}/api/patrols`, patrolData, {
         withCredentials: true,
       });
 
-      setPatrols((prevPatrols: Patrol[]) => [...prevPatrols, response.data]);
+      // Refresh the entire list to ensure correct ordering
+      await fetchPatrols(currentPage, itemsPerPage);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Axios error details:", {
@@ -119,6 +168,7 @@ export const PatrolProvider = ({ children }: { children: React.ReactNode }) => {
         { withCredentials: true }
       );
 
+      // Update the local state immediately
       setPatrols((prevPatrols) =>
         prevPatrols.map((patrol) =>
           patrol.id === patrolId
@@ -126,6 +176,9 @@ export const PatrolProvider = ({ children }: { children: React.ReactNode }) => {
             : patrol
         )
       );
+
+      // Optional: Refresh all data to ensure consistency
+      await fetchPatrols(currentPage, itemsPerPage);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Error updating patrol status:", error.response?.data);
@@ -143,9 +196,54 @@ export const PatrolProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const deletePatrol = useCallback(
+    async (patrolId: string) => {
+      if (!patrolId) {
+        console.error("Error: Patrol ID is undefined or null.");
+        return;
+      }
+      setIsLoading(true);
+      try {
+        await axios.delete(`${apiUrl}/api/patrols/${patrolId}`, {
+          withCredentials: true,
+        });
+
+        // Update local state
+        setPatrols((prevPatrols) =>
+          prevPatrols.filter((patrol) => patrol.id !== patrolId)
+        );
+
+        // Refresh to update pagination
+        await fetchPatrols(currentPage, itemsPerPage);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          console.error("Error deleting patrol:", error.response?.data);
+          alert(error.response?.data?.message || "Failed to delete patrol");
+        } else {
+          console.error("Unexpected error:", error);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [currentPage, fetchPatrols, itemsPerPage]
+  );
+
+  // Initial data load
   useEffect(() => {
     fetchPatrols();
   }, [fetchPatrols]);
+
+  // Set up polling for updates
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const intervalId = setInterval(() => {
+      checkForUpdates();
+    }, refreshInterval * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, checkForUpdates]);
 
   return (
     <PatrolContext.Provider
@@ -156,6 +254,9 @@ export const PatrolProvider = ({ children }: { children: React.ReactNode }) => {
         pagination,
         fetchPatrols,
         updatePatrolStatus,
+        deletePatrol,
+        setAutoRefresh,
+        setRefreshInterval,
       }}
     >
       {children}

@@ -2,12 +2,13 @@
 import React, { useState, useEffect, createContext } from "react";
 import axios from "axios";
 import { apiUrl } from "@/utils/utils";
-import { Employee } from "@/interface";
+import { Employee, Company } from "@/interfaces/interface";
 
-// Define context type
 type EmployeeContextType = {
   employees: Employee[];
+  companies: Company[];
   fetchEmployees: (page?: number) => Promise<void>;
+  fetchCompanies: () => Promise<void>;
   addEmployee: (employeeData: {
     name: string;
     position: string;
@@ -21,7 +22,9 @@ type EmployeeContextType = {
 
 export const EmployeeContext = createContext<EmployeeContextType>({
   employees: [],
+  companies: [],
   fetchEmployees: async () => {},
+  fetchCompanies: async () => {},
   addEmployee: async () => {},
   pagination: { currentPage: 1, totalPages: 1 },
   setCurrentPage: () => {},
@@ -33,14 +36,15 @@ export const EmployeeProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [currentPage, setCurrentPage] = useState(1); // Separate state for tracking page
+  const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
   });
   const [error, setError] = useState<string | null>(null);
-  const limit = 25; // Fixed limit per page
+  const limit = 25;
 
   const fetchEmployees = async (page = 1) => {
     try {
@@ -51,11 +55,10 @@ export const EmployeeProvider = ({
       }>(`${apiUrl}/api/employees?page=${page}&limit=${limit}`);
 
       setEmployees(response.data.employees);
-      setPagination((prev) => ({
-        ...prev,
+      setPagination({
         currentPage: page,
         totalPages: response.data.totalPages,
-      }));
+      });
     } catch (err) {
       setError("Failed to fetch employees. Please try again.");
       console.error("Error fetching employees:", err);
@@ -67,26 +70,52 @@ export const EmployeeProvider = ({
     position: string;
     phone: string;
     companyId: string;
-  }) => {
+  }): Promise<void> => {
     try {
       setError(null);
       await axios.post(`${apiUrl}/api/employees`, employeeData);
-      fetchEmployees(currentPage); // Use currentPage for refetching
-    } catch (err) {
-      setError("Failed to add employee. Please try again.");
+      fetchEmployees(currentPage);
+    } catch (err: unknown) {
+      let errorMessage = "Failed to add employee. Please try again.";
+      if (axios.isAxiosError(err) && err.response) {
+        errorMessage = err.response.data?.error || errorMessage;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
       console.error("Error adding employee:", err);
+      throw new Error(errorMessage);
+    }
+  };
+
+  const fetchCompanies = async () => {
+    try {
+      setError(null);
+      const response = await axios.get<{ companies: Company[] }>(
+        `${apiUrl}/api/companies`
+      );
+      setCompanies(response.data.companies);
+    } catch (err) {
+      setError("Failed to fetch companies. Please try again.");
+      console.error("Error fetching companies:", err);
     }
   };
 
   useEffect(() => {
     fetchEmployees(currentPage);
-  }, [currentPage]); // Include only `currentPage` to satisfy ESLint
+  }, [currentPage]);
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
 
   return (
     <EmployeeContext.Provider
       value={{
+        companies,
         employees,
         fetchEmployees,
+        fetchCompanies,
         addEmployee,
         pagination,
         setCurrentPage,

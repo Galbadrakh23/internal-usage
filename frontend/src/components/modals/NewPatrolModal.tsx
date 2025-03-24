@@ -5,15 +5,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { PatrolContext } from "@/context/PatrolProvider";
-import { useUsers } from "@/context/UserProvider";
-import { User } from "@/interface";
 import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -41,7 +38,7 @@ const formSchema = z.object({
   status: z.string().min(1, "Status is required"),
   notes: z.string().optional(),
   imagePath: z.string().optional(),
-  checkedBy: z.string().min(1, "Checked by is required"),
+  checkedBy: z.string().optional(),
   propertyId: z.string().min(1, "Property ID is required"),
   totalCheckPoint: z.number().min(0, "Must be a positive number"),
 });
@@ -54,8 +51,7 @@ const properties = [
 ];
 
 const statuses = [
-  { value: "PENDING", label: "Хүлээгдэж буй" },
-  { value: "ACTIVE", label: "Хийгдэж байгаа" },
+  { value: "PENDING", label: "Хүлээгдэж байгаа" },
   { value: "COMPLETED", label: "Дууссан" },
 ];
 
@@ -69,7 +65,6 @@ export default function CreatePatrolModal({
   onClose,
 }: CreatePatrolModalProps) {
   const { createPatrol } = useContext(PatrolContext);
-  const { users } = useUsers();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -118,18 +113,15 @@ export default function CreatePatrolModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Патрол бүртгэх</DialogTitle>
-          <DialogDescription>
-            Та патрол бүртгэх мэдээллийг оруулна уу.
-          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
             <FormField
               control={form.control}
               name="checkPoint"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Шалгах цэгийн нэр</FormLabel>
+                  <FormLabel>Гарчиг</FormLabel>
                   <FormControl>
                     <Input placeholder="Шалгах цэг оруулах" {...field} />
                   </FormControl>
@@ -203,7 +195,7 @@ export default function CreatePatrolModal({
                   <FormControl>
                     <Textarea
                       placeholder="Тэмдэглэл бичих"
-                      className="min-h-24"
+                      className="min-h-12"
                       {...field}
                     />
                   </FormControl>
@@ -218,23 +210,12 @@ export default function CreatePatrolModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Шалгасан хүн</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Шалгасан хүнийг сонгох" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {users.map((user: User) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Input
+                      placeholder="Шалгасан хүний нэр оруулах"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

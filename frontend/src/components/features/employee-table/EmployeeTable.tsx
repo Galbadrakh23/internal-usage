@@ -6,7 +6,7 @@ import {
   DynamicTable,
   type TableColumn,
 } from "@/components/data-table/DynamicTable";
-import type { Employee } from "@/interface";
+import type { Employee } from "@/interfaces/interface";
 import {
   Select,
   SelectItem,
@@ -20,16 +20,11 @@ import { Plus } from "lucide-react";
 import Pagination from "@/components/features/pagination/Pagination";
 
 export default function EmployeeInformationPanel() {
-  const { employees, addEmployee, fetchEmployees } =
-    useContext(EmployeeContext);
+  const { employees, addEmployee, companies } = useContext(EmployeeContext);
   const [selectedCompany, setSelectedCompany] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [searchTerm] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>(""); // Fixed: Now search is used
   const pageSize = 25;
-
-  const companies = Array.from(
-    new Set(employees.map((employee) => employee.company.name))
-  ).sort();
 
   const filteredEmployees = useMemo(() => {
     const companyFiltered =
@@ -39,19 +34,17 @@ export default function EmployeeInformationPanel() {
             (employee) => employee.company.name === selectedCompany
           );
 
-    const searchFiltered = searchTerm
-      ? companyFiltered.filter((employee) => {
-          const searchLower = searchTerm.toLowerCase();
-          return (
-            employee.name.toLowerCase().includes(searchLower) ||
-            employee.position.toLowerCase().includes(searchLower) ||
-            employee.company.name.toLowerCase().includes(searchLower) ||
-            (employee.phone && employee.phone.includes(searchLower))
-          );
-        })
-      : companyFiltered;
-
-    return searchFiltered.sort((a, b) => b.name.localeCompare(a.name));
+    const searchLower = searchTerm.toLowerCase();
+    return companyFiltered
+      .filter((employee) =>
+        [
+          employee.name,
+          employee.position,
+          employee.company.name,
+          employee.phone,
+        ].some((field) => field?.toLowerCase().includes(searchLower))
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [employees, selectedCompany, searchTerm]);
 
   const totalItems = filteredEmployees.length;
@@ -62,28 +55,23 @@ export default function EmployeeInformationPanel() {
   const currentItems = filteredEmployees.slice(startIndex, endIndex);
 
   const columns: TableColumn<Employee>[] = [
-    {
-      id: "name",
-      header: "Нэр",
-      accessorFn: (employee) => employee.name,
-      searchable: true,
-    },
+    { id: "name", header: "Нэр", accessorFn: (e) => e.name, searchable: true },
     {
       id: "position",
       header: "Албан тушаал",
-      accessorFn: (employee) => employee.position,
+      accessorFn: (e) => e.position,
       searchable: true,
     },
     {
       id: "department",
-      header: "Хэлтэс",
-      accessorFn: (employee) => employee.company.name,
+      header: "Компани",
+      accessorFn: (e) => e.company.name,
       searchable: true,
     },
     {
       id: "phone",
       header: "Утас",
-      accessorFn: (employee) => employee.phone,
+      accessorFn: (e) => e.phone,
       searchable: true,
     },
   ];
@@ -105,13 +93,9 @@ export default function EmployeeInformationPanel() {
       <EmployeeModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => {
-          fetchEmployees();
-          setIsModalOpen(false);
-        }}
-        selectedCompanyId={selectedCompany}
-        companies={companies.map((company) => ({ id: company, name: company }))}
         addEmployee={addEmployee}
+        companies={companies}
+        onSuccess={() => setIsModalOpen(false)}
       />
       <Button variant="outline" onClick={() => setIsModalOpen(true)}>
         <Plus className="h-5 w-5" />
@@ -121,18 +105,15 @@ export default function EmployeeInformationPanel() {
   );
 
   const selectCompany = (
-    <Select
-      value={selectedCompany}
-      onValueChange={(value) => handleCompanyChange(value)}
-    >
+    <Select value={selectedCompany} onValueChange={handleCompanyChange}>
       <SelectTrigger className="w-28">
         <SelectValue placeholder="Компани сонгох" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">Бүгд</SelectItem>
         {companies.map((company) => (
-          <SelectItem key={company} value={company}>
-            {company}
+          <SelectItem key={company.id} value={company.name}>
+            {company.name}
           </SelectItem>
         ))}
       </SelectContent>
@@ -153,6 +134,7 @@ export default function EmployeeInformationPanel() {
         actionComponents={actionComponents}
         selectCompany={selectCompany}
         showSearch={true}
+        onSearchChange={(value) => setSearchTerm(value)} // Fixed: Implemented search functionality
       />
       <div className="flex justify-center mt-4">
         <Pagination

@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { AlertCircle } from "lucide-react";
 import { useState, ChangeEvent, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import type { User } from "@/interface";
+import type { User } from "@/interfaces/interface";
 import { toast } from "sonner";
 
 interface EditUserModalProps {

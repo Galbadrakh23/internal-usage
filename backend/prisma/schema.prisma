@@ -17,7 +17,6 @@ model User {
   ReportComments     Comment[]
   records            Record[]
   Report             Report[]
-  patrolChecks       PatrolCheck[]
 }
 
 model Record {
@@ -156,7 +155,6 @@ model PatrolCheck {
   checkedBy       String
   propertyId      String
   totalCheckPoint Int
-  user            User        @relation(fields: [checkedBy], references: [id])
   property        Property    @relation(fields: [propertyId], references: [id])
 
   @@map("patrol_checks")

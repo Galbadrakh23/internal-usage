@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import axios from "axios";
 import { apiUrl } from "@/utils/utils";
-import { User } from "@/interface";
+import { User } from "@/interfaces/interface";
 
 interface UserContextType {
   user: User | null;

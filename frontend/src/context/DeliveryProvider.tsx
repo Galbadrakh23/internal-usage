@@ -3,7 +3,7 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { apiUrl } from "@/utils/utils";
-import { Delivery, TrackingItemData } from "@/interface";
+import { Delivery, TrackingItemData } from "@/interfaces/interface";
 
 type DeliveryContextType = {
   deliveries: Delivery[];

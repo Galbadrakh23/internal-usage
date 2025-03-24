@@ -23,7 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { JobRequest, JobStatus, Priority } from "@/interface";
+import { JobRequest, JobStatus, Priority } from "@/interfaces/interface";
 
 interface JobsRequestDetailModalProps {
   open: boolean;

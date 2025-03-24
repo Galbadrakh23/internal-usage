@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-  Clock,
+  CalendarCheck,
   Utensils,
   Shield,
   ShoppingCart,
@@ -65,7 +65,11 @@ const MENU_ITEMS: MenuCategory[] = [
   {
     category: "Тайлан",
     items: [
-      { title: "Нийт тайлан", url: "/dashboard/report-board", icon: Clock },
+      {
+        title: "Нийт тайлан",
+        url: "/dashboard/report-board",
+        icon: CalendarCheck,
+      },
       { title: "Хоолны тоо", url: "/dashboard/meal-count", icon: Utensils },
       { title: "Патрол чек", url: "/dashboard/patrol-check", icon: Shield },
     ],
@@ -118,7 +122,11 @@ export function SideBar() {
           <div className="flex items-center justify-between p-4 border-b">
             {!collapsed && (
               <SidebarGroupLabel className="text-lg font-semibold text-gray-900">
-                {userRole === "ADMIN" ? "Админ" : "Ажилтан"}
+                {userRole === "ADMIN"
+                  ? "Админ"
+                  : userRole === "MANAGER"
+                  ? "Менежер"
+                  : "Ажилтан"}
               </SidebarGroupLabel>
             )}
             <button
